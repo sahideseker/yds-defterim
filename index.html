@@ -34,18 +34,29 @@ button,input,select,textarea{font:inherit;color:inherit}
 .lvbar{width:56px;height:6px;border-radius:9px;background:var(--line);overflow:hidden}.lvbar i{display:block;height:100%;background:var(--acc);border-radius:9px;transition:width .5s}
 .sync{font-size:12px;color:var(--muted);font-weight:500}
 nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-nav.tabs a{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;color:var(--muted);font-size:12px;font-weight:700;padding:4px;border-radius:12px}
+nav.tabs a{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;color:var(--muted);font-size:11.5px;padding:4px;border-radius:12px;text-align:center}
+nav.tabs a b{font-weight:700}nav.tabs a small{display:none}
 nav.tabs a span{font-size:19px;line-height:1.2}
 @media (max-width:420px){nav.tabs a{font-size:10.5px;padding:4px 1px}}
 nav.tabs a.on{color:var(--acc);background:var(--acc-soft)}
-@media (min-width:760px){
-  body{padding-bottom:30px}
-  nav.tabs{position:sticky;top:53px;bottom:auto;justify-content:center;gap:6px;background:transparent;border:0;padding:12px}
-  nav.tabs a{flex-direction:row;gap:6px;max-width:none;flex:0 0 auto;padding:7px 14px;font-size:14px;background:var(--card);border:1px solid var(--line)}
-  nav.tabs a span{font-size:16px}
-  nav.tabs a.on{border-color:var(--acc)}
-}
 main{max-width:980px;margin:0 auto;padding:16px}
+.top-in{max-width:1180px!important}
+@media (min-width:900px){
+  body{padding-bottom:30px}
+  .shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:28px;padding:0 20px}
+  nav.tabs{position:sticky;top:70px;bottom:auto;align-self:start;flex-direction:column;justify-content:flex-start;gap:4px;background:transparent;border:0;padding:18px 0}
+  nav.tabs a{flex-direction:row;align-items:center;gap:12px;max-width:none;flex:0 0 auto;padding:10px 14px;font-size:15px;text-align:left;color:var(--ink)}
+  nav.tabs a span{font-size:20px}
+  nav.tabs a small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+  nav.tabs a.on{background:var(--card);box-shadow:var(--sh);color:var(--acc)}
+  main{margin:0;padding:18px 0 40px;max-width:880px}
+}
+.phead{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:4px 2px 2px}
+.phead h1{margin:0}.phead p{margin:2px 0 0;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media (min-width:1100px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile2{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--sh);transition:transform .1s,border-color .15s}
+.tile2:hover{border-color:var(--acc);transform:translateY(-2px)}
+.tile2 .ic{font-size:28px}.tile2 b{display:block;font-size:17px;margin-top:6px}.tile2 span{font-size:13px;color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
 .grid{display:grid;gap:14px}
 .g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
@@ -131,7 +142,7 @@ mark.hl{background:var(--acc-soft);color:inherit;border-bottom:2px solid var(--a
 .sent+.sent{margin-top:14px}
 .sent .tr{color:var(--ok);margin-top:4px}
 .sent .st{font-size:13px;color:var(--muted);margin-top:4px;background:var(--bg);border-radius:8px;padding:6px 10px}
-#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
+#toast{position:fixed;left:50%;top:66px;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
 #toast div{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.25);animation:tin .25s;max-width:88vw;text-align:center}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}}
 #modal{position:fixed;inset:0;z-index:50;background:rgba(15,15,20,.45);display:flex;align-items:flex-end;justify-content:center;padding:12px}
@@ -154,21 +165,21 @@ details summary{cursor:pointer;font-weight:700}
 <header class="top"><div class="top-in">
   <div class="brand">YDS <b>Defterim</b></div>
   <div class="hud">
-    <span class="pill" title="Seviye"><span id="hLvl">Lv 1</span><span class="lvbar"><i id="hBar" style="width:0"></i></span></span>
     <span class="pill" id="hStreak" title="Seri: arka arkaya çalışılan gün">🔥 0</span>
     <span class="pill" id="hToday" title="Bugünkü XP / günlük hedef">⭐ 0/100</span>
     <span class="sync hide-m" id="sync"></span>
   </div>
 </div></header>
+<div class="shell">
 <nav class="tabs">
-  <a href="#ana" data-v="ana"><span>🏠</span>Ana</a>
-  <a href="#ekle" data-v="ekle"><span>➕</span>Ekle</a>
-  <a href="#defter" data-v="defter"><span>📒</span>Defter</a>
-  <a href="#calis" data-v="calis"><span>🎮</span>Çalış</a>
-  <a href="#rehber" data-v="rehber"><span>📘</span>Rehber</a>
-  <a href="#metin" data-v="metin"><span>📄</span>Metin</a>
+  <a href="#ana" data-v="ana"><span>🏠</span><div><b>Bugün</b><small>Günlük tekrar, ilerleme</small></div></a>
+  <a href="#defter" data-v="defter"><span>📒</span><div><b>Kelimelerim</b><small>Ekle, ara, düzenle</small></div></a>
+  <a href="#calis" data-v="calis"><span>🎮</span><div><b>Çalış</b><small>Oyunlarla tekrar</small></div></a>
+  <a href="#metin" data-v="metin"><span>📄</span><div><b>Metinler</b><small>Paragraf çöz, çevir</small></div></a>
+  <a href="#rehber" data-v="rehber"><span>📘</span><div><b>Gramer</b><small>Gramer & çeviri notları</small></div></a>
 </nav>
 <main id="main"><div class="loader"><span class="spin"></span> Defterin açılıyor…</div></main>
+</div>
 <div id="toast"></div>
 <div id="modal" hidden></div>
 
@@ -328,14 +339,12 @@ const isDue = it => it.seen>0 && it.due<=Date.now();
 
 /* ---------- HUD + routing ---------- */
 function hud(){
-  const L=levelInfo(S.stats.xp); $('#hLvl').textContent='Lv '+L.lv; $('#hBar').style.width=Math.round(L.rest/L.need*100)+'%';
-  $('#hLvl').parentElement.title=L.title+' — sonraki seviyeye '+(L.need-L.rest)+' XP';
   $('#hStreak').textContent='🔥 '+streak();
   $('#hToday').textContent='⭐ '+(S.stats.days[today()]||0)+'/'+S.stats.goal;
 }
-const VIEWS={ana:vAna, ekle:vEkle, defter:vDefter, calis:vCalis, rehber:vRehber, metin:vMetin};
+const VIEWS={ana:vAna, defter:vDefter, calis:vCalis, rehber:vRehber, metin:vMetin};
 function route(){
-  let v=(location.hash||'').slice(1); if(!VIEWS[v]) v='ana';
+  let v=(location.hash||'').slice(1); if(v==='ekle'){ S.addOpen=true; v='defter'; } if(!VIEWS[v]) v='ana';
   if(S.view==='calis' && v!=='calis') endGame();
   S.view=v; document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===v));
   render(); window.scrollTo(0,0);
@@ -346,7 +355,6 @@ function onData(){
   if(!S.ready) return;
   const m=$('#main');
   if(S.view==='calis' && G) return;
-  if(S.view==='ekle'){ if(!m.querySelector('#fAdd')) render(); else refreshEkleSide(); return; }
   if(S.view==='defter'){ if(!m.querySelector('#defList')) render(); else renderDefList(); return; }
   if(S.view==='metin' && S.metinOpen==='new' && m.querySelector('#tBody')) return;
   const ae=document.activeElement; if(ae && ['gNote','rQ','scanIn','myTr'].includes(ae.id)) return;
@@ -360,89 +368,84 @@ function vAna(){
   const st=S.stats, its=S.items, now=Date.now();
   const due=its.filter(isDue).length, nw=its.filter(i=>!i.seen).length;
   const todayXp=st.days[today()]||0, pct=Math.min(100,Math.round(todayXp/st.goal*100));
-  const L=levelInfo(st.xp);
+  const L=levelInfo(st.xp), queue=due+Math.min(nw,10);
   const kel=its.filter(i=>i.type==='kelime').length, kal=its.length-kel, learned=its.filter(i=>i.box>=5).length;
   const boxes=[0,0,0,0,0,0,0]; its.forEach(i=>boxes[Math.min(6,i.box)]++);
   const dn=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
-  const wk=[]; for(let k=6;k>=0;k--){ const d=new Date(now-k*DAY); const key=dayKey(d); wk.push({l:k===0?'Bugün':dn[d.getDay()], v:st.days[key]||0}); }
+  const wk=[]; for(let k=6;k>=0;k--){ const d=new Date(now-k*DAY); wk.push({l:k===0?'Bugün':dn[d.getDay()], v:st.days[dayKey(d)]||0}); }
   const mx=Math.max(st.goal, ...wk.map(w=>w.v));
-  let exam=''; if(st.examDate){ const left=Math.ceil((new Date(st.examDate+'T09:00')-now)/DAY); exam = left>=0 ? `<div class="pill" style="background:rgba(255,255,255,.15);border:0;color:#fff">📅 Sınava ${left} gün</div>` : ''; }
-  const queue=Math.min(due+Math.min(nw,10),999);
-  let h=`<div class="stack">
+  let left=null; if(st.examDate){ const l=Math.ceil((new Date(st.examDate+'T09:00')-now)/DAY); if(l>=0) left=l; }
+  const lastEx=S.exams.length?S.exams[S.exams.length-1]:null;
+  const title = !its.length ? 'Hoş geldin! 👋' : todayXp>=st.goal ? 'Bugünkü hedef tamam! 🎉' : queue ? `Bugün ${queue} kart seni bekliyor` : 'Bugünlük tekrar yok 🎉';
+  const sub = !its.length ? 'İlk adım: hocanın verdiği kelimeleri kaydet ya da hazır bağlaç paketiyle başla.' : todayXp>=st.goal ? 'İstersen bir metin çöz ya da gramer notlarına göz at.' : queue ? 'Kartlar 15–20 dakika sürer. Bitirince seri devam eder 🔥' : 'Yeni kelime ekleyebilir ya da tüm defterle çalışabilirsin.';
+  $('#main').innerHTML=`<div class="stack">
   <div class="card hero"><div class="row" style="gap:18px;align-items:center">
     <div class="ring" style="--p:${pct}"><div>${todayXp}<br><span style="font-size:11px;font-weight:600">/ ${st.goal} XP</span></div></div>
     <div class="sp" style="min-width:200px">
-      <div class="row" style="gap:6px;margin-bottom:6px">${exam}<div class="pill" style="background:rgba(255,255,255,.15);border:0;color:#fff">🎯 Hedef ${esc(st.target)}+</div></div>
-      <h1 style="color:#fff">${todayXp>=st.goal?'Bugünkü hedef tamam! 🎉':its.length?'Bugün '+queue+' kart seni bekliyor':'Hoş geldin! Defterin hazır.'}</h1>
-      <div class="muted">${its.length? `${due} tekrar zamanı gelen · ${nw} hiç çalışılmamış` : 'Hocanın verdiği kelime ve kalıpları ekleyerek başla.'}</div>
-      <div class="row" style="margin-top:12px">${its.length? `<button class="btn lg" data-act="startDaily">▶ Günün tekrarını başlat</button>` : `<a class="btn lg" href="#ekle">➕ İlk kelimeni ekle</a>`}</div>
-    </div></div></div>`;
-  if(!its.length){
-    h+=`<div class="card"><h3>Hızlı başlangıç</h3><p class="muted" style="margin-top:0">YDS metinlerinde en çok karşına çıkacak <b>45 bağlaç ve kalıp</b> (however, despite, due to, provided that, let alone…) hazır. İstersen tek tıkla defterine ekleyeyim, hocanın verdiklerini üstüne eklersin.</p><button class="btn pri" data-act="starter">📦 YDS bağlaç paketini ekle</button></div>`;
-  }
-  h+=examCard();
-  h+=`<div class="grid g3">
-    <div class="card stat"><div class="muted small">Toplam</div><div class="big">${its.length}</div><div class="small muted"><span class="chip kelime">${kel} kelime</span> <span class="chip kalip">${kal} kalıp</span></div></div>
-    <div class="card stat"><div class="muted small">Öğrenilen (1 ay+)</div><div class="big">${learned}</div><div class="small muted">${its.length?Math.round(learned/its.length*100):0}% kalıcı hafızada</div></div>
-    <div class="card stat"><div class="muted small">Seviye ${L.lv}</div><div class="big" style="font-size:22px;margin:4px 0 6px">${esc(L.title)}</div><div class="lvbar" style="width:100%"><i style="width:${Math.round(L.rest/L.need*100)}%"></i></div><div class="small muted" style="margin-top:4px">${st.xp} XP · sonraki seviye ${L.need-L.rest} XP</div></div>
-  </div>
-  <div class="grid g2">
-    <div class="card"><div class="row"><h3 class="sp">Son 7 gün</h3><span class="small muted">🔥 ${streak()} gün seri</span></div>
-      <div class="week">${wk.map(w=>`<div class="${w.v>=st.goal?'goalhit':''}"><span>${w.v||''}</span><i style="height:${Math.max(3,w.v/mx*80)}px"></i>${w.l}</div>`).join('')}</div></div>
-    <div class="card"><h3>Hafıza kutuları</h3><p class="small muted" style="margin:0 0 10px">Her doğru cevapta kart bir sonraki kutuya geçer ve daha seyrek sorulur. Yanlışta başa döner.</p>
-      <div class="boxes">${its.length?boxes.map((n,i)=>n?`<i style="width:${n/its.length*100}%;background:${BOXC[i]}" title="${BOXL[i]}: ${n}"></i>`:'').join(''):''}</div>
-      <div class="legend">${BOXL.map((l,i)=>`<span><b style="background:${BOXC[i]}"></b>${l}: ${boxes[i]}</span>`).join('')}</div></div>
+      <h1 style="color:#fff">${title}</h1><div class="muted">${sub}</div>
+      <div class="row" style="margin-top:14px">${!its.length?`<button class="btn lg" data-act="openAdd">➕ İlk kelimeni ekle</button><button class="btn lg" data-act="starter" style="background:rgba(255,255,255,.18);color:#fff">📦 Bağlaç paketi</button>`: queue?`<button class="btn lg" data-act="startDaily">▶ Tekrara başla</button>`:`<a class="btn lg" href="#calis">🎮 Çalış</a>`}</div>
+    </div></div></div>
+  <div class="card"><div class="row" style="gap:22px;justify-content:space-around;text-align:center">
+    <div><div class="big" style="font-size:26px">🔥 ${streak()}</div><div class="small muted">gün seri</div></div>
+    <div><div class="big" style="font-size:26px">${its.length}</div><div class="small muted">kelime & kalıp</div></div>
+    <div><div class="big" style="font-size:26px">${learned}</div><div class="small muted">öğrenildi</div></div>
+    <div><div class="big" style="font-size:26px">Lv ${L.lv}</div><div class="small muted">${esc(L.title)}</div></div>
+    ${left!=null?`<div><div class="big" style="font-size:26px">${left}</div><div class="small muted">gün sınava</div></div>`:''}
+    ${lastEx?`<div><div class="big" style="font-size:26px;color:${examScore(lastEx)>=st.target?'var(--ok)':'var(--acc)'}">${examScore(lastEx)}</div><div class="small muted">son deneme</div></div>`:''}
+  </div></div>
+  <div><h3 style="margin:8px 2px 10px">Ne yapmak istiyorsun?</h3><div class="tiles">
+    <a class="tile2" href="#ekle"><div class="ic">➕</div><b>Kelime ekle</b><span>Videoda hocanın verdiği kelime ve kalıpları kaydet</span></a>
+    <a class="tile2" href="#calis"><div class="ic">🎮</div><b>Çalış</b><span>Kartlar, test, boşluk doldurma, eşleştirme</span></a>
+    <a class="tile2" href="#metin"><div class="ic">📄</div><b>Metin çöz</b><span>Paragrafı kaydet, kendin çevir, kontrol et</span></a>
+    <a class="tile2" href="#rehber"><div class="ic">📘</div><b>Gramer notları</b><span>Çevirirken takıldığın yapıya bak</span></a>
+  </div></div>
+  <details class="card" id="progBox" ${S.progOpen?'open':''}><summary>📈 İlerlemem ve denemelerim</summary><div class="stack" style="margin-top:14px">
+    ${examCard()}
+    <div class="grid g2">
+      <div class="card"><h3>Son 7 gün</h3><div class="week">${wk.map(w=>`<div class="${w.v>=st.goal?'goalhit':''}"><span>${w.v||''}</span><i style="height:${Math.max(3,w.v/mx*80)}px"></i>${w.l}</div>`).join('')}</div></div>
+      <div class="card"><h3>Hafıza kutuları</h3><p class="small muted" style="margin:0 0 10px">Doğru bildikçe kart sonraki kutuya geçer ve daha seyrek sorulur.</p>
+        <div class="boxes">${its.length?boxes.map((n,i)=>n?`<i style="width:${n/its.length*100}%;background:${BOXC[i]}" title="${BOXL[i]}: ${n}"></i>`:'').join(''):''}</div>
+        <div class="legend">${BOXL.map((l,i)=>`<span><b style="background:${BOXC[i]}"></b>${l}: ${boxes[i]}</span>`).join('')}</div><div class="small muted" style="margin-top:8px"><span class="chip kelime">${kel} kelime</span> <span class="chip kalip">${kal} kalıp</span></div></div>
+    </div>
+    <div class="row"><button class="btn sm ghost" data-act="settings">⚙️ Ayarlar: günlük hedef, sınav tarihi, hedef puan</button>${its.length?'<button class="btn sm ghost" data-act="starter">📦 Bağlaç paketi</button>':''}</div>
+  </div></details>
   </div>`;
-  const recent=its.slice(0,5);
-  if(recent.length) h+=`<div class="card"><div class="row"><h3 class="sp">Son eklediklerin</h3><a href="#defter" class="small">Tümü →</a></div>${recent.map(i=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><span class="chip ${i.type}">${i.type==='kalip'?'kalıp':'kelime'}</span><b>${esc(i.en)}</b><span class="muted sp">${esc(i.tr)}</span></div>`).join('')}</div>`;
-  h+=`<div class="row"><button class="btn ghost sm" data-act="settings">⚙️ Ayarlar (günlük hedef, sınav tarihi)</button>${its.length?'<button class="btn ghost sm" data-act="starter">📦 Bağlaç paketi</button>':''}</div></div>`;
-  $('#main').innerHTML=h;
+  $('#progBox').addEventListener('toggle', e=>{ S.progOpen=e.target.open; });
 }
-
 /* ---------- EKLE ---------- */
 function sources(){ return [...new Set(S.items.map(i=>i.source).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr')); }
 let addType='kelime';
-function vEkle(){
-  $('#main').innerHTML=`<div class="grid" style="grid-template-columns:minmax(0,1fr)">
-  <form class="card stack" id="fAdd" autocomplete="off">
-    <div class="row"><h2 class="sp" style="margin:0">Yeni ekle</h2>
-      <div class="seg" id="typeSeg"><button type="button" data-t="kelime" class="${addType==='kelime'?'on':''}">Kelime</button><button type="button" data-t="kalip" class="${addType==='kalip'?'on':''}">Kalıp</button></div></div>
-    <div><label class="f" for="aEn">İngilizce *</label><input class="in" id="aEn" required placeholder="ör. due to  /  give rise to" style="font-size:18px;font-weight:700"><div id="dupWarn" class="small" style="color:var(--bad);margin-top:4px"></div></div>
+function ekleHTML(){
+  return `<form class="card stack" id="fAdd" autocomplete="off" style="border-color:var(--acc)">
+    <div class="row"><h3 class="sp" style="margin:0">➕ Yeni kelime / kalıp</h3>
+      <div class="seg" id="typeSeg"><button type="button" data-t="kelime" class="${addType==='kelime'?'on':''}">Kelime</button><button type="button" data-t="kalip" class="${addType==='kalip'?'on':''}">Kalıp</button></div>
+      <button type="button" class="btn sm ghost" data-act="closeAdd" title="Kapat">✕</button></div>
+    <div><label class="f" for="aEn">İngilizce *</label><input class="in" id="aEn" required placeholder="ör. due to" style="font-size:18px;font-weight:700"><div id="dupWarn" class="small" style="color:var(--bad);margin-top:4px"></div></div>
     <div><div class="row" style="margin-bottom:4px"><label class="f sp" for="aTr" style="margin:0">Türkçe anlamı *</label><button type="button" class="btn sm ai ai-only" data-act="aiFill">✨ Claude doldursun</button></div>
       <input class="in" id="aTr" required placeholder="ör. nedeniyle, -den dolayı"></div>
-    <div><label class="f" for="aEx">Örnek cümle (videodaki / metindeki cümle)</label><input class="in" id="aEx" placeholder="The delay was due to bad weather."></div>
-    <div><label class="f" for="aExTr">Örnek cümlenin çevirisi</label><input class="in" id="aExTr" placeholder="Gecikme kötü hava nedeniyleydi."></div>
-    <div><label class="f" for="aNote">Not / kullanım</label><input class="in" id="aNote" placeholder="ör. due to + isim / V-ing · eş anl.: owing to"></div>
-    <div class="grid g2" style="gap:10px">
-      <div><label class="f" for="aSrc">Kaynak</label><input class="in" id="aSrc" list="srcList" placeholder="ör. Hoca – Video 3 / Reading at Work U2" value="${esc(S.lastSource)}"><datalist id="srcList">${sources().map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
-      <div><label class="f" for="aTags">Etiketler (virgülle)</label><input class="in" id="aTags" placeholder="bağlaç, zıtlık"></div>
-    </div>
-    <div class="row"><button class="btn pri lg" type="submit">Kaydet</button><span class="small muted">Kaynak alanı hatırlanır — video izlerken art arda hızlıca ekleyebilirsin. Enter = kaydet.</span></div>
-  </form>
-  <div class="card stack">
-    <details id="bulkBox"><summary>⚡ Toplu ekle (listeyi yapıştır)</summary>
-      <p class="small muted">Her satıra bir tane: <code>ingilizce = türkçe</code> (ayraç olarak = , - , : ya da Tab olur). Birden çok kelimeli satırlar otomatik “kalıp” sayılır.<span class="ai-txt"> Anlamı boş bırakırsan Claude doldurur.</span></p>
-      <textarea class="in" id="bulkTxt" rows="7" placeholder="nevertheless = yine de&#10;in terms of = açısından&#10;abundant = bol, çok miktarda&#10;give rise to"></textarea>
-      <div class="row" style="margin-top:8px"><button class="btn pri" type="button" data-act="bulkAdd">Listeyi ekle</button><span id="bulkMsg" class="small muted"></span></div>
-    </details>
-  </div>
-  <div class="card" id="todayAdded"></div>
-  </div>`;
-  $('#typeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; addType=b.dataset.t; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x===b)); };
+    <div><label class="f" for="aSrc">Nereden? (kaynak)</label><input class="in" id="aSrc" list="srcList" placeholder="ör. Hoca – Video 3" value="${esc(S.lastSource)}"><datalist id="srcList">${sources().map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
+    <details id="addMore"><summary class="small">+ Örnek cümle ve not ekle (isteğe bağlı)</summary><div class="stack" style="margin-top:10px">
+      <div><label class="f" for="aEx">Örnek cümle</label><input class="in" id="aEx" placeholder="The delay was due to bad weather."></div>
+      <div><label class="f" for="aExTr">Örnek cümlenin çevirisi</label><input class="in" id="aExTr" placeholder="Gecikme kötü hava nedeniyleydi."></div>
+      <div><label class="f" for="aNote">Not</label><input class="in" id="aNote" placeholder="ör. due to + isim · eş anl.: owing to"></div>
+      <div><label class="f" for="aTags">Etiketler (virgülle)</label><input class="in" id="aTags" placeholder="bağlaç, zıtlık"></div></div></details>
+    <div class="row"><button class="btn pri" type="submit">Kaydet</button><span class="small muted">Enter ile kaydedebilirsin; kaynak bir sonraki kayıt için hatırlanır.</span></div>
+    <details id="bulkBox" style="border-top:1px dashed var(--line);padding-top:10px"><summary class="small">⚡ Elinde liste mi var? Toplu ekle</summary>
+      <p class="small muted">Her satıra bir tane: <code>ingilizce = türkçe</code>. Birden çok kelimeli satırlar “kalıp” sayılır.<span class="ai-txt"> Anlamı boş bırakırsan Claude doldurur.</span></p>
+      <textarea class="in" id="bulkTxt" rows="6" placeholder="nevertheless = yine de&#10;in terms of = açısından&#10;give rise to"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" type="button" data-act="bulkAdd">Listeyi ekle</button><span id="bulkMsg" class="small muted"></span></div></details>
+  </form>`;
+}
+function bindEkle(){
+  if(!$('#fAdd')) return;
+  $('#typeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; addType=b.dataset.t; $('#aEn').dataset.manual='1'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x===b)); };
   $('#aEn').addEventListener('input', ()=>{ dupCheck(); const v=$('#aEn').value.trim(); if(/\s/.test(v) && addType==='kelime' && !$('#aEn').dataset.manual){ addType='kalip'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t==='kalip')); } });
-  $('#typeSeg').addEventListener('click', ()=>{ $('#aEn').dataset.manual='1'; });
   $('#fAdd').onsubmit=e=>{ e.preventDefault(); addFromForm(); };
-  refreshEkleSide(); setTimeout(()=>$('#aEn')&&$('#aEn').focus(),50);
+  setTimeout(()=>$('#aEn')&&$('#aEn').focus(),50);
 }
 function findDup(en, exceptId){ const n=norm(en); return n ? S.items.find(i=>norm(i.en)===n && i.id!==exceptId) : null; }
 function dupCheck(){ const d=findDup($('#aEn').value); $('#dupWarn').innerHTML = d ? `Bu zaten defterinde: <b>${esc(d.en)}</b> — ${esc(d.tr)} <button type="button" class="btn sm" data-act="editItem" data-id="${d.id}">Düzenle</button>` : ''; }
-function refreshEkleSide(){
-  const el=$('#todayAdded'); if(!el) return;
-  const t0=new Date(); t0.setHours(0,0,0,0);
-  const list=S.items.filter(i=>i.created>=t0.getTime());
-  el.innerHTML = `<h3>Bugün eklediklerin (${list.length})</h3>` + (list.length? list.slice(0,30).map(i=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><span class="chip ${i.type}">${i.type==='kalip'?'kalıp':'kelime'}</span><b>${esc(i.en)}</b><span class="muted sp">${esc(i.tr)}</span><button class="btn sm ghost" data-act="editItem" data-id="${i.id}">✎</button></div>`).join('') : '<p class="muted small" style="margin:0">Henüz yok. Hadi ilkini ekle!</p>');
-  const dl=$('#srcList'); if(dl) dl.innerHTML=sources().map(s=>`<option value="${esc(s)}">`).join('');
-}
+function refreshEkleSide(){ const dl=$('#srcList'); if(dl) dl.innerHTML=sources().map(s=>`<option value="${esc(s)}">`).join(''); }
 function addFromForm(){
   const en=$('#aEn').value.trim(), tr=$('#aTr').value.trim();
   if(!en||!tr){ toast('İngilizce ve Türkçe anlam gerekli.'); return; }
@@ -450,8 +453,8 @@ function addFromForm(){
   const it=mkItem({type:addType, en, tr, example:$('#aEx').value, exampleTr:$('#aExTr').value, note:$('#aNote').value, source:$('#aSrc').value, tags:$('#aTags').value});
   saveItem(it); S.lastSource=it.source; savePrefs(); addXp(2, $('#fAdd button[type=submit]'));
   ['aEn','aTr','aEx','aExTr','aNote'].forEach(k=>$('#'+k).value=''); delete $('#aEn').dataset.manual; $('#dupWarn').innerHTML='';
-  addType='kelime'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t==='kelime'));
-  toast('Eklendi ✓ '+it.en); refreshEkleSide(); $('#aEn').focus();
+  addType='kelime'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t==='kelime')); $('#addMore').open=false;
+  toast('Eklendi ✓ '+it.en); refreshEkleSide(); renderDefList(); $('#aEn').focus();
 }
 async function aiFill(btn){
   const en=$('#aEn').value.trim(); if(!en){ toast('Önce İngilizce ifadeyi yaz.'); $('#aEn').focus(); return; }
@@ -472,6 +475,7 @@ ${ctx?`Geçtiği cümle (anlamı bu bağlama göre ver): "${ctx}"`:''}
     if(!$('#aTr')) return;
     if(!$('#aTr').value.trim()) $('#aTr').value=o.tr||'';
     if(!ctx){ $('#aEx').value=o.example||''; $('#aExTr').value=o.exampleTr||''; } else if(!$('#aExTr').value.trim() && o.exampleTr && ctx===o.example) $('#aExTr').value=o.exampleTr;
+    $('#addMore').open=true;
     if(!$('#aNote').value.trim()) $('#aNote').value=o.note||'';
     if(o.type && !$('#aEn').dataset.manual){ addType=o.type==='kalip'?'kalip':'kelime'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t===addType)); }
   }catch(e){ aiErr(e); }
@@ -509,8 +513,9 @@ Her öğe: {"en":"ifadenin kendisi","type":"kelime"|"kalip","tr":"kısa Türkçe
 function vDefter(){
   const f=S.df;
   $('#main').innerHTML=`<div class="stack">
+  <div class="phead"><div class="sp"><h1>Kelimelerim</h1><p>Hocanın verdiği kelime ve kalıplar burada. ${S.items.length} kayıt.</p></div>${S.addOpen?'':'<button class="btn pri" data-act="openAdd">➕ Yeni ekle</button>'}<button class="btn" data-act="backup">💾 Yedek</button></div>
+  ${S.addOpen?ekleHTML():''}
   <div class="card stack">
-    <div class="row"><h2 class="sp" style="margin:0">Defterim</h2><button class="btn sm" data-act="backup">💾 Yedek / içe aktar</button></div>
     <input class="in" id="dQ" placeholder="🔎 Ara: kelime, anlam, not, kaynak…" value="${esc(f.q)}">
     <div class="row">
       <select class="in" id="dType" style="width:auto"><option value="hepsi">Hepsi</option><option value="kelime">Kelimeler</option><option value="kalip">Kalıplar</option></select>
@@ -524,7 +529,7 @@ function vDefter(){
   $('#dType').onchange=e=>{ f.type=e.target.value; renderDefList(); };
   $('#dSrc').onchange=e=>{ f.src=e.target.value; renderDefList(); };
   $('#dSort').onchange=e=>{ f.sort=e.target.value; renderDefList(); };
-  renderDefList();
+  renderDefList(); bindEkle();
 }
 function renderDefList(){
   const f=S.df, el=$('#defList'); if(!el) return;
@@ -675,7 +680,8 @@ function vCalis(){
     {k:'yaz',ic:'⌨️',t:'Yaz',d:'Türkçesini gör, İngilizcesini yaz. En kalıcı öğrenme yöntemi.',ok:p.length>=1,need:'En az 1 öğe'}
   ];
   $('#main').innerHTML=`<div class="stack">
-  <div class="card stack"><h2 style="margin:0">Çalış</h2>
+  <div class="phead"><div><h1>Çalış</h1><p>Önce neyi çalışacağını seç, sonra bir oyun seç.</p></div></div>
+  <div class="card stack"><div style="font-weight:700">1. Neyi çalışacaksın?</div>
     <div class="row">
       <select class="in" id="pScope" style="width:auto"><option value="gunluk">🗓 Günün tekrarı</option><option value="tumu">📚 Tüm defter</option><option value="yeni">🆕 Hiç çalışılmamış</option><option value="zor">😵 Zorlandıklarım</option><option value="son">🕐 Son 7 günde eklenen</option></select>
       <select class="in" id="pType" style="width:auto"><option value="hepsi">Kelime + kalıp</option><option value="kelime">Sadece kelimeler</option><option value="kalip">Sadece kalıplar</option></select>
@@ -684,6 +690,7 @@ function vCalis(){
     </div>
     <div class="small muted">${p.length?`Bu seçimde <b>${p.length}</b> öğe var.`:(all? (f.scope==='gunluk'?'🎉 Bugün için tekrar zamanı gelen kart yok! “Tüm defter” ya da “Zorlandıklarım” ile devam edebilirsin.':'Bu seçimde öğe yok.') : 'Önce defterine birkaç kelime ekle.')}</div>
   </div>
+  <div style="font-weight:700;margin:6px 2px 0">2. Oyun seç</div>
   <div class="grid g3 games">${games.map(g=>`<div class="card"><div class="ic">${g.ic}</div><h3 style="margin:0">${g.t}</h3><div class="small muted sp">${g.d}</div><button class="btn ${g.ok?'pri':''}" data-act="startGame" data-k="${g.k}" ${g.ok?'':'disabled'}>${g.ok?'Başla':g.need}</button></div>`).join('')}</div>
   ${S.stats.bestMatch?`<div class="small muted center">🏆 Eşleştirme rekorun: ${(S.stats.bestMatch/1000).toFixed(1)} sn / 5 çift</div>`:''}
   </div>`;
@@ -824,7 +831,7 @@ function vMetin(){
   if(o==='new') return metinNew();
   if(o){ const t=S.texts.find(x=>x.id===o); if(t) return metinDetail(t); S.metinOpen=null; }
   $('#main').innerHTML=`<div class="stack">
-  <div class="card"><div class="row"><div class="sp"><h2 style="margin:0">Metin defteri</h2><div class="small muted">Çözdüğün paragrafları (Reading at Work, deneme, video) burada sakla. Önce kendin çevir, sonra kontrol et.</div></div><button class="btn pri" data-act="newText">➕ Yeni metin</button></div></div>
+  <div class="phead"><div class="sp"><h1>Metinler</h1><p>Paragrafı yapıştır, önce kendin çevir, sonra kontrol et. Metindeki gramer yapıları otomatik bulunur.</p></div><button class="btn pri" data-act="newText">➕ Yeni metin</button></div>
   ${S.texts.length?S.texts.map(t=>`<div class="item" data-act="openText" data-id="${t.id}"><div class="row"><span class="en sp">${esc(t.title||'Başlıksız metin')}</span>${t.analysis?'<span class="chip kalip">çözümlendi</span>':''}</div><div class="small muted">${t.source?esc(t.source)+' · ':''}${new Date(t.created||Date.now()).toLocaleDateString('tr-TR')} · ${esc(String(t.body||'').slice(0,110))}…</div></div>`).join('')
   :`<div class="card empty"><div class="big">📄</div><h3>Henüz metin yok</h3><p class="muted">Hocanın çözdüğü ya da Reading at Work’ten bir paragrafı yapıştır.<span class="ai-txt"> Claude cümle cümle çeviri, yapı analizi ve kelime listesi çıkarabilir; senin çevirine de geri bildirim verir.</span></p></div>`}
   </div>`;
@@ -1066,7 +1073,8 @@ function vRehber(){
   const R=S.r;
   if(R.open){ const c=cardById(R.open); if(c) return rehberCard(c); R.open=null; }
   $('#main').innerHTML=`<div class="stack">
-  <div class="card stack"><div><h2 style="margin:0">Rehber</h2><div class="small muted">Metin çevirirken takıldığın yapıyı buradan bul. Her kartta tanıma ipuçları, çeviri kalıbı, YDS tuzakları ve mini test var.</div></div>
+  <div class="phead"><div><h1>Gramer & çeviri notları</h1><p>Metin çevirirken takıldığın yapıyı ara ya da cümleyi tarayıcıya yapıştır.</p></div></div>
+  <div class="card stack">
     <input class="in" id="rQ" placeholder="🔎 Metinde ne gördün? ör. which, had been, unless, despite, -ing" value="${esc(R.q)}">
     <div class="row" id="rG"><button class="btn sm ${!R.g?'pri':''}" data-g="">Hepsi</button>${Object.entries(GROUPS).map(([k,v])=>`<button class="btn sm ${R.g===k?'pri':''}" data-g="${k}">${v}</button>`).join('')}</div>
   </div>
@@ -1149,6 +1157,8 @@ function examModal(id){
 const ACT={
   startDaily:()=>{ S.pf.scope='gunluk'; savePrefs(); const p=getPool(); if(!p.length){ toast('Bugün tekrar edilecek kart yok 🎉 Tüm defterle çalışabilirsin.'); go('calis'); return; } startGame('kart', p); },
   starter:()=>addStarter(),
+  openAdd:()=>{ S.addOpen=true; if(S.view!=='defter') go('defter'); else { vDefter(); window.scrollTo(0,0); } },
+  closeAdd:()=>{ S.addOpen=false; if(location.hash==='#ekle'){ try{ history.replaceState(null,'','#defter'); }catch(e){} } vDefter(); },
   settings:()=>settingsModal(),
   backup:()=>backupModal(),
   aiFill:b=>aiFill(b),
