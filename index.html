@@ -35,7 +35,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sync{font-size:12px;color:var(--muted);font-weight:500}
 nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
 nav.tabs a{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;color:var(--muted);font-size:12px;font-weight:700;padding:4px;border-radius:12px}
-nav.tabs a span{font-size:20px;line-height:1.2}
+nav.tabs a span{font-size:19px;line-height:1.2}
+@media (max-width:420px){nav.tabs a{font-size:10.5px;padding:4px 1px}}
 nav.tabs a.on{color:var(--acc);background:var(--acc-soft)}
 @media (min-width:760px){
   body{padding-bottom:30px}
@@ -164,6 +165,7 @@ details summary{cursor:pointer;font-weight:700}
   <a href="#ekle" data-v="ekle"><span>➕</span>Ekle</a>
   <a href="#defter" data-v="defter"><span>📒</span>Defter</a>
   <a href="#calis" data-v="calis"><span>🎮</span>Çalış</a>
+  <a href="#rehber" data-v="rehber"><span>📘</span>Rehber</a>
   <a href="#metin" data-v="metin"><span>📄</span>Metin</a>
 </nav>
 <main id="main"><div class="loader"><span class="spin"></span> Defterin açılıyor…</div></main>
@@ -196,7 +198,8 @@ const S = {
   view:'ana', ai:false,
   df:{q:'', type:'hepsi', src:'', sort:'yeni', open:null},
   pf:{scope:'gunluk', type:'hepsi', src:''},
-  dir:'en', lastSource:'', metinOpen:null
+  dir:'en', lastSource:'', metinOpen:null,
+  gnotes:{}, exams:[], r:{q:'',g:'',open:null,back:null,quiz:null,scan:''}
 };
 try { const p=JSON.parse(localStorage.getItem('ydsdefter_prefs')||'{}'); if(p.pf) S.pf={...S.pf,...p.pf}; if(p.dir) S.dir=p.dir; if(p.lastSource) S.lastSource=p.lastSource; } catch(e){}
 function savePrefs(){ try{ localStorage.setItem('ydsdefter_prefs', JSON.stringify({pf:S.pf, dir:S.dir, lastSource:S.lastSource})); }catch(e){} }
@@ -221,7 +224,7 @@ function mkItem(o, keep){
 const LS_KEY='ydsdefter_v1';
 function lsLoad(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'null'); }catch(e){ return null; } }
 let lsT=null;
-function lsSaveSoon(){ clearTimeout(lsT); lsT=setTimeout(()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify({items:S.items, texts:S.texts, stats:S.stats})); setSync('ok'); }catch(e){ toast('Tarayıcı hafızası dolu ya da kapalı: yedek almayı unutma.'); } }, 250); }
+function lsSaveSoon(){ clearTimeout(lsT); lsT=setTimeout(()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify({items:S.items, texts:S.texts, stats:S.stats, gnotes:S.gnotes, exams:S.exams})); setSync('ok'); }catch(e){ toast('Tarayıcı hafızası dolu ya da kapalı: yedek almayı unutma.'); } }, 250); }
 
 const wq = new Map(); let wRunning=false;
 function persist(id, data){
@@ -266,16 +269,19 @@ async function connect(){
   const loadT=setTimeout(()=>{ if(!S.ready){ toast('Kayıtlı verine henüz ulaşılamadı, bağlantını kontrol et.',5000); setSync('err'); } }, 10000);
   let first=true;
   col.onSnapshot(snap=>{
-    const items=[], texts=[]; let stats=null;
+    const items=[], texts=[], exams=[], gnotes={}; let stats=null;
     snap.docs.forEach(doc=>{ const v=doc.data(); if(!v) return;
       if(wq.has(doc.id)) return;
       if(v.kind==='item') items.push(mkItem({...v, id:doc.id}, null));
       else if(v.kind==='text') texts.push({...v, id:doc.id});
+      else if(v.kind==='exam') exams.push({...v, id:doc.id});
+      else if(v.kind==='gnote') gnotes[v.card]=v;
       else if(doc.id==='_stats') stats=v; });
     // keep local versions of still-queued writes
-    for(const [k,v] of wq){ if(v===null) continue; if(v.kind==='item') items.push(mkItem(v)); else if(v.kind==='text') texts.push({...v}); }
+    for(const [k,v] of wq){ if(v===null) continue; if(v.kind==='item') items.push(mkItem(v)); else if(v.kind==='text') texts.push({...v}); else if(v.kind==='exam') exams.push({...v}); else if(v.kind==='gnote') gnotes[v.card]=v; }
     S.items = items.sort((a,b)=>b.created-a.created);
     S.texts = texts.sort((a,b)=>(b.created||0)-(a.created||0));
+    S.exams = exams.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.created||0)-(b.created||0)); S.gnotes = gnotes;
     if(stats && (+stats.ts||0) >= (S.stats.ts||0)) S.stats = {...DEF_STATS, ...stats, days:{...(stats.days||{})}};
     if(!snap.metadata.fromCache){ clearTimeout(loadT); if(first){ first=false; migrateLocal(snap.empty); } }
     S.ready=true; onData();
@@ -283,7 +289,7 @@ async function connect(){
 }
 function goLocal(){
   S.mode='local'; const l=lsLoad();
-  if(l){ S.items=(l.items||[]).map(x=>mkItem(x)); S.texts=l.texts||[]; S.stats={...DEF_STATS,...(l.stats||{})}; }
+  if(l){ S.items=(l.items||[]).map(x=>mkItem(x)); S.texts=l.texts||[]; S.stats={...DEF_STATS,...(l.stats||{})}; S.gnotes=l.gnotes||{}; S.exams=l.exams||[]; }
   S.ready=true; setSync('ok'); onData();
 }
 async function migrateLocal(isEmpty){
@@ -291,6 +297,7 @@ async function migrateLocal(isEmpty){
   const l=lsLoad(); if(done || !isEmpty || !l || !(l.items||[]).length) return;
   (l.items||[]).forEach(x=>{ const it=mkItem(x); S.items.push(it); persist(it.id,{...it,kind:'item'}); });
   (l.texts||[]).forEach(t=>saveText(t));
+  (l.exams||[]).forEach(e=>saveExam(e)); Object.values(l.gnotes||{}).forEach(n=>saveGNote(n));
   if(l.stats){ S.stats={...DEF_STATS,...l.stats}; saveStats(); }
   try{ localStorage.setItem('ydsdefter_migrated','1'); }catch(e){}
   toast('Bu tarayıcıdaki eski kayıtların hesabına taşındı ✓'); onData();
@@ -326,7 +333,7 @@ function hud(){
   $('#hStreak').textContent='🔥 '+streak();
   $('#hToday').textContent='⭐ '+(S.stats.days[today()]||0)+'/'+S.stats.goal;
 }
-const VIEWS={ana:vAna, ekle:vEkle, defter:vDefter, calis:vCalis, metin:vMetin};
+const VIEWS={ana:vAna, ekle:vEkle, defter:vDefter, calis:vCalis, rehber:vRehber, metin:vMetin};
 function route(){
   let v=(location.hash||'').slice(1); if(!VIEWS[v]) v='ana';
   if(S.view==='calis' && v!=='calis') endGame();
@@ -342,6 +349,7 @@ function onData(){
   if(S.view==='ekle'){ if(!m.querySelector('#fAdd')) render(); else refreshEkleSide(); return; }
   if(S.view==='defter'){ if(!m.querySelector('#defList')) render(); else renderDefList(); return; }
   if(S.view==='metin' && S.metinOpen==='new' && m.querySelector('#tBody')) return;
+  const ae=document.activeElement; if(ae && ['gNote','rQ','scanIn','myTr'].includes(ae.id)) return;
   render();
 }
 window.addEventListener('hashchange', route);
@@ -372,6 +380,7 @@ function vAna(){
   if(!its.length){
     h+=`<div class="card"><h3>Hızlı başlangıç</h3><p class="muted" style="margin-top:0">YDS metinlerinde en çok karşına çıkacak <b>45 bağlaç ve kalıp</b> (however, despite, due to, provided that, let alone…) hazır. İstersen tek tıkla defterine ekleyeyim, hocanın verdiklerini üstüne eklersin.</p><button class="btn pri" data-act="starter">📦 YDS bağlaç paketini ekle</button></div>`;
   }
+  h+=examCard();
   h+=`<div class="grid g3">
     <div class="card stat"><div class="muted small">Toplam</div><div class="big">${its.length}</div><div class="small muted"><span class="chip kelime">${kel} kelime</span> <span class="chip kalip">${kal} kalıp</span></div></div>
     <div class="card stat"><div class="muted small">Öğrenilen (1 ay+)</div><div class="big">${learned}</div><div class="small muted">${its.length?Math.round(learned/its.length*100):0}% kalıcı hafızada</div></div>
@@ -871,13 +880,14 @@ function metinDetail(t){
     <div style="font-size:17px;line-height:1.75;white-space:pre-wrap">${hlText(t.body||'')}</div>
     <div class="small muted">Vurgulananlar defterinde olan kelime/kalıplar — dokununca anlamı görünür.</div>
   </div>
+  <div class="card stack"><div><h3 style="margin:0">🧭 Bu metindeki yapılar</h3><div class="small muted">Çevirirken takılırsan ilgili nota dokun. Sayı = kaç cümlede geçtiği.</div></div>${structChips(t.body||'')}</div>
   <div class="card stack"><h3 style="margin:0">Benim çevirim</h3><textarea class="in" id="myTr" rows="5" placeholder="Önce kendin çevir…">${esc(t.my||'')}</textarea>
     <div class="row"><button class="btn sm" data-act="saveMy" data-id="${t.id}">Kaydet</button><button class="btn sm ai ai-only" data-act="reanalyze" data-id="${t.id}">✨ ${A?'Çevirimle birlikte yeniden çözümle':'Claude ile çözümle'}</button></div></div>
   ${A?`
   ${A.mainIdea?`<div class="card"><h3>💡 Ana fikir</h3><div>${esc(A.mainIdea)}</div></div>`:''}
   ${A.feedback?`<div class="card" style="border-color:var(--ok)"><h3>📝 Çevirine geri bildirim</h3><div style="white-space:pre-wrap">${esc(A.feedback)}</div></div>`:''}
   <div class="card"><div class="row"><h3 class="sp">Cümle cümle çözümleme</h3><button class="btn sm" data-act="toggleTr">Çevirileri ${S.hideTr?'göster':'gizle'}</button></div>
-    ${A.sentences.map((s,k)=>`<div class="sent"><div><b class="muted small">${k+1}.</b> ${hlText(s.en)}</div>${S.hideTr?`<button class="btn sm ghost" data-act="peek" data-k="${k}" style="margin-top:4px">👁 Çeviriyi göster</button><div class="tr" data-peek="${k}" hidden>${esc(s.tr)}</div>`:`<div class="tr">${esc(s.tr)}</div>`}${s.structure?`<div class="st">🔍 ${esc(s.structure)}</div>`:''}</div>`).join('')}
+    ${A.sentences.map((s,k)=>`<div class="sent"><div><b class="muted small">${k+1}.</b> ${hlText(s.en)}</div>${S.hideTr?`<button class="btn sm ghost" data-act="peek" data-k="${k}" style="margin-top:4px">👁 Çeviriyi göster</button><div class="tr" data-peek="${k}" hidden>${esc(s.tr)}</div>`:`<div class="tr">${esc(s.tr)}</div>`}${s.structure?`<div class="st">🔍 ${esc(s.structure)}</div>`:''}<div style="margin-top:4px">${structChips(s.en,true)}</div></div>`).join('')}
   </div>
   <div class="card"><div class="row"><h3 class="sp">Bu metindeki kelime & kalıplar</h3><button class="btn sm pri" data-act="addAllA" data-id="${t.id}">Hepsini deftere ekle</button></div>
     ${A.items.map((x,k)=>{ const d=findDup(x.en); return `<div class="row" style="padding:8px 0;border-top:1px solid var(--line)"><span class="chip ${x.type}">${x.type==='kalip'?'kalıp':'kelime'}</span><b>${esc(x.en)}</b><span class="muted sp">${esc(x.tr)}${x.note?` · <span class="small">${esc(x.note)}</span>`:''}</span>${d?'<span class="small" style="color:var(--ok)">✓ defterde</span>':`<button class="btn sm" data-act="addA" data-id="${t.id}" data-k="${k}">+ Ekle</button>`}</div>`; }).join('')}
@@ -887,6 +897,252 @@ function metinDetail(t){
 function itemFromA(t, x){
   const A=t.analysis; const s=A.sentences.find(s=>findIn(s.en,x.en));
   return mkItem({type:x.type, en:x.en, tr:x.tr, note:x.note, example:s?s.en:'', exampleTr:s?s.tr:'', source:t.source||t.title||'Metin', tags:'metin'});
+}
+
+/* ---------- REHBER: gramer & çeviri notları ---------- */
+const GROUPS={yontem:'Çeviri yöntemi',yapi:'Cümle yapısı',fiil:'Zaman & fiil',baglac:'Bağlaçlar',ozel:'Özel yapılar'};
+const GRAMMAR=[
+{id:'ceviri-yontemi',g:'yontem',t:'Uzun cümleyi çevirme: 6 adım',s:'Cümle ne kadar uzun olursa olsun hep aynı sırayla çöz.',k:'çeviri yöntem adım uzun cümle parçalama',
+ tani:[],
+ cevir:['<b>1.</b> Cümleyi bir kez sonuna kadar oku; bilmediğin kelimeye takılma.','<b>2.</b> Bağlaçları ve noktalamayı işaretle (although, which, that, virgüller). Cümle bunlardan parçalara ayrılır.','<b>3.</b> Yan cümleleri ve ara bilgileri paranteze al: which…, who…, -ing…, iki virgül arası.','<b>4.</b> Parantez dışında kalan <b>asıl özne + asıl yüklemi</b> bul. Cümlenin omurgası budur.','<b>5.</b> Önce omurgayı çevir (“Çalışma … ileri sürüyor”), sonra parantezleri ait oldukları yere yerleştir.','<b>6.</b> Türkçeyi oku: doğal mı? Zaman, olumsuzluk ve nicelik (some / most / all) korunmuş mu?'],
+ ex:[['[The study] (which was conducted in five countries) [suggests] [that people (who sleep less) are more likely to gain weight].','Beş ülkede yürütülen çalışma, daha az uyuyan insanların kilo alma olasılığının daha yüksek olduğunu ileri sürüyor.']],
+ tuzak:['Türkçede yüklem sondadır: İngilizceyi soldan sağa kelime kelime çevirme.','“that” çoğu zaman “ki” değil, “-dığını” demektir.'],quiz:[]},
+{id:'ceviri-sorusu',g:'yontem',t:'Çeviri sorularında şık eleme',s:'Doğru şıkkı arama; yanlış şıkları kontrol listesiyle ele.',k:'çeviri soru şık eleme taktik strateji',
+ tani:[],
+ cevir:['<b>Zaman:</b> geçmiş mi, geniş zaman mı, present perfect mi (“-mıştır / -dığından beri”)?','<b>Olumsuzluk:</b> not, never, hardly, few / little (pek az) şıkta karşılanmış mı?','<b>Edilgen / etken:</b> “yapıldı” mı, “yaptı” mı?','<b>Nicelik:</b> some (bazı), most (çoğu), all (tüm), a few (birkaç) ≠ few (pek az).','<b>Kesinlik:</b> may / might (-ebilir), must (-meli / kesinlikle), likely (muhtemelen), seem (gibi görünüyor).','<b>Bağlaç:</b> although (rağmen) ≠ because (çünkü); unless (-medikçe).','<b>Karşılaştırma:</b> more / less / as … as doğru mu?','<b>Asıl yüklem:</b> Türkçe cümlenin son fiili, İngilizcedeki asıl yüklemle aynı mı?'],
+ ex:[],tuzak:['Kelimeleri en çok eşleşen şık değil, anlamı ve yapıyı koruyan şık doğrudur.','Şıklar arasında bazen tek fark vardır: “bazı / çoğu”, “-ebilir / -meli”.'],quiz:[]},
+{id:'kelime-turu',g:'yontem',t:'Bilinmeyen kelime: ekten türünü tahmin et',s:'Anlamını bilmesen de kelimenin türünü bulmak cümleyi çözer.',k:'ek suffix prefix önek sonek kelime türü tahmin',
+ tani:['<b>İsim:</b> -tion / -sion, -ment, -ness, -ity, -ance / -ence, -ism, -ship, -er / -or (yapan kişi)','<b>Sıfat:</b> -ive, -ous, -al, -ful, -less, -able / -ible, -ic, -ant / -ent','<b>Zarf:</b> -ly (rapidly = hızlı bir şekilde)','<b>Fiil:</b> -ize / -ise, -ify, -en (widen), -ate','<b>Önekler:</b> un-, in- / im- / il- / ir-, dis-, non- (olumsuz) · mis- (yanlış) · under- (yetersiz) · over- (aşırı) · re- (yeniden) · pre- (önce)'],
+ cevir:[],ex:[['The overuse of antibiotics has rendered many infections untreatable.','Antibiyotiklerin aşırı kullanımı pek çok enfeksiyonu tedavi edilemez hale getirdi. (over-use · un-treat-able)']],
+ tuzak:['-ly her zaman zarf değildir: friendly, costly, likely, elderly sıfattır.'],quiz:[]},
+{id:'asil-yuklem',g:'yapi',t:'Asıl özne ve yüklemi bulmak',s:'Uzun öznenin sonunda asıl yüklem gelir; onu bulursan cümle çözülür.',k:'özne yüklem subject main verb omurga',
+ sig:['\\bthe number of\\b','\\ba number of\\b','^\\s*what\\s+\\w+','^\\s*\\w+ing\\s+\\w+[^,]*\\s(is|are|was|were|has|have|can|may|will)\\b'],
+ tani:['Yüklem çekimli fiildir: is / are / was, has / had, will / can / may, -s ya da -ed almış fiil.','Özne uzun olabilir: “The number of students who…”, “What scientists found…”, “Reducing emissions…” (V-ing özne), “The fact that…”.','which / who / that ile başlayan parçanın içindeki fiil asıl yüklem <b>değildir</b>.','İki virgül arasındaki bilgiyi çıkarınca cümle hâlâ tamdır.'],
+ cevir:['Omurga: [Özne] … [Yüklem]. Türkçede özneyi başa, yüklemi sona koy, aradakileri sonra yerleştir.'],
+ ex:[['What surprised the researchers most was the speed at which the virus spread.','Araştırmacıları en çok şaşırtan şey, virüsün yayılma hızıydı.'],['Reducing sugar intake significantly lowers the risk of diabetes.','Şeker alımını azaltmak diyabet riskini önemli ölçüde düşürür.']],
+ tuzak:['“The number of X is…” (X’lerin sayısı) tekildir; “A number of X are…” (birçok X) çoğuldur.'],
+ quiz:[['The results of the survey conducted among 2,000 teachers ___ that workload is the main cause of stress.',['show','shows','showing','to show'],0,'Asıl özne “The results” (çoğul); “survey” değil. Yüklem çoğul: show.'],
+  ['“The method that the team developed last year has reduced costs.” Asıl yüklem hangisi?',['developed','has reduced','reduced','that'],1,'“that the team developed last year” isimi niteleyen yan cümle. Asıl yüklem: has reduced.']]},
+{id:'relative',g:'yapi',t:'Sıfat cümlecikleri (who / which / that / whose)',s:'İsmi tanımlayan yan cümle; Türkçede “-en / -dığı” olur.',k:'relative clause sıfat cümleciği who which that whose whom where',
+ sig:['\\b(who|whom|whose|which)\\b','\\b(in|on|at|by|of|through|during|under|to|from|with) (which|whom)\\b'],
+ tani:['who (insan), which (nesne / kavram), that (ikisi de), whose (-in … -ı olan), whom (-dığı kişi), where (-dığı yer), when (-dığı zaman)','Edat + which: in which (içinde … -dığı), by which (aracılığıyla … -dığı), of which (-ın … -ı)','Virgüllü “, which …” bazen önceki cümlenin TAMAMINI niteler: “bu da … ” diye çevrilir.'],
+ cevir:['Önce nitelenen ismi bul, cümleciği isimden ÖNCE sıfat gibi koy: “the scientist who discovered X” → “X’i keşfeden bilim insanı”.','Özne konumundaysa “-en”, nesneyse “-dığı”: “the book that I read” → “okuduğum kitap”.','whose: “a country whose economy depends on oil” → “ekonomisi petrole bağlı olan bir ülke”.'],
+ ex:[['Children whose parents read to them regularly develop stronger language skills.','Ebeveynleri onlara düzenli olarak kitap okuyan çocuklar daha güçlü dil becerileri geliştirir.'],['The temperature rose by 2 degrees, which caused widespread crop failure.','Sıcaklık 2 derece arttı, bu da yaygın ürün kayıplarına yol açtı.']],
+ tuzak:['that’ten önce virgül gelmez; virgül varsa which / who seçilir.','Edattan sonra that gelmez: “in which” doğru. “in that” ise “-dığı için” anlamında bağlaçtır.'],
+ quiz:[['The region, ___ economy relies heavily on tourism, was badly hit by the pandemic.',['which','whose','where','that'],1,'“ekonomisi turizme dayanan bölge” → sahiplik: whose.'],
+  ['The method ___ the data were collected was criticised.',['which','by which','that','whom'],1,'“verilerin toplandığı yöntem” → by which (yöntemle toplandı).'],
+  ['“…, which led to a sharp rise in prices.” nasıl çevrilir?',['fiyatlarda keskin artışa yol açan …','… bu da fiyatlarda keskin bir artışa yol açtı','hangisi fiyatları artırdı','fiyatlar keskin arttığı için'],1,'Virgüllü which önceki cümlenin tamamını niteler: “bu da …”.']]},
+{id:'kisaltma',g:'yapi',t:'Kısaltmalar: -ing / V3 / having V3',s:'who / which ve bağlaçlı cümleler kısalır; fiil -ing ya da V3 olarak kalır.',k:'reduction kısaltma participle -ing -ed v3 having',
+ sig:['\\bhaving\\s+(been\\s+)?\\w+(ed|en|wn|ght|ne|un|ung)\\b','^\\s*(when|while|although|though|once|if|unless|after|before|since|until)\\s+\\w+(ed|ing|en)\\b','^\\s*\\w+ing\\b[^,]{0,80},','^\\s*\\w+(ed|en)\\b[^,]{0,80},','\\b(data|people|students|children|patients|countries|energy|products?|studies|methods?|results?|those|anyone)\\s+\\w+(ed|ing)\\s+(by|in|from|at|on|with|to|for)\\b'],
+ tani:['İsimden sonra V-ing = etken: “people living in cities” = “şehirlerde yaşayan insanlar”.','İsimden sonra V3 = edilgen: “the data collected in 2020” = “2020’de toplanan veriler”.','Cümle başında V-ing + virgül: “Using this method, …” = “Bu yöntemi kullanarak …”.','Cümle başında V3 + virgül: “Written in 1850, the book …” = “1850’de yazılmış olan kitap …”.','Having + V3 = önce olan eylem: “Having finished the test, …” = “Testi bitirdikten sonra …”.','Bağlaç + -ing / V3: “When heated, …” = “Isıtıldığında …”; “Although criticised, …” = “Eleştirilmesine rağmen …”.'],
+ cevir:['Kısaltmanın öznesi ana cümlenin öznesidir: kimin yaptığını oradan bul.'],
+ ex:[['Having analysed the samples, the team published its findings.','Numuneleri analiz ettikten sonra ekip bulgularını yayımladı.'],['Most of the energy produced in the country comes from coal.','Ülkede üretilen enerjinin çoğu kömürden gelir.']],
+ tuzak:['“produced” geçmiş zaman yüklemi sanılabilir; arkadan asıl yüklem (comes) geliyorsa o bir kısaltmadır.'],
+ quiz:[['___ in 1889, the Eiffel Tower was initially criticised.',['Building','Built','Having built','To build'],1,'Kule inşa EDİLDİ → edilgen kısaltma: V3 (Built).'],
+  ['The number of people ___ from obesity has doubled.',['suffered','suffering','to suffer','suffer'],1,'“obeziteden muzdarip olan insanlar” → etken: V-ing.']]},
+{id:'isim-cumlecigi',g:'yapi',t:'İsim cümlecikleri (that / what / whether / how)',s:'Bir cümle başka bir cümlenin öznesi ya da nesnesi olur: “-dığı(nı)”, “-ip -madığı”.',k:'noun clause isim cümleciği that what whether how',
+ sig:['\\bwhether\\b','\\bthe fact that\\b','\\b(suggests?|suggested|shows?|showed|shown|argues?|argued|believes?|believed|indicates?|indicated|claims?|claimed|found|finds?|reveals?|revealed|demonstrates?|demonstrated|states?|stated|reports?|reported|assumes?|assumed|concluded?|noted?)\\s+that\\b','^\\s*what\\b'],
+ tani:['that + cümle (fiilden sonra): “suggest / show / argue that …” = “… -dığını ileri sürüyor / gösteriyor”.','what = “-dığı şey”: “What we need is time.” = “İhtiyacımız olan şey zaman.”','whether / if = “-ip -madığı”: “It is unclear whether …” = “… -ip -madığı belirsiz”.','how / why / when / where + cümle: “how the brain works” = “beynin nasıl çalıştığı”.','The fact that … = “… -dığı gerçeği”.'],
+ cevir:['that’li cümleyi fiilin nesnesi yap, fiili sona koy: “Studies suggest that X causes Y.” → “Çalışmalar X’in Y’ye neden olduğunu ileri sürüyor.”'],
+ ex:[['Whether the policy will succeed depends on public support.','Politikanın başarılı olup olmayacağı halkın desteğine bağlı.']],
+ tuzak:['what her zaman soru değildir; “-dığı şey” olabilir.','that’i “ki” diye çevirme; “-dığını” yap.'],
+ quiz:[['Researchers are still investigating ___ the virus jumped from animals to humans.',['that','what','how','which'],2,'“virüsün hayvanlardan insanlara nasıl geçtiği” → how.'],
+  ['___ remains unknown is the exact age of the fossil.',['That','What','Which','Whether'],1,'“Bilinmeyen şey …” → What (-dığı şey).']]},
+{id:'it-there',g:'yapi',t:'It / There yapıları ve vurgu',s:'“It” çoğu zaman boş öznedir; asıl özne cümlenin devamındadır.',k:'it is that cleft vurgu there is boş özne not until',
+ sig:['\\bit\\s+(is|was|has been|seems|appears|remains)\\s+\\w+\\s+(to|that)\\b','\\bit (is|was) not until\\b','\\bit (is|was|has been)\\s+(widely\\s+)?(believed|thought|said|estimated|known|reported|argued|expected|assumed|suggested)\\s+that\\b','\\bthere\\s+(is|are|was|were|seems|seem|appears|appear|has been|have been)\\b'],
+ tani:['It is + sıfat + to V / that: “It is essential to reduce waste.” = “Atığı azaltmak çok önemlidir.”','It is believed / estimated that … = “… -dığına inanılıyor / tahmin ediliyor.”','Vurgu: “It was the doctor who …” = “… -en doktordu.”','It was not until X that Y = “Y ancak X’te oldu.”','There is / are = “… var”; There seems to be = “… var gibi görünüyor.”'],
+ cevir:['Boş özne “it”i “o” diye çevirme, hiç çevirme.'],
+ ex:[['It was not until the 19th century that the cause of the disease was discovered.','Hastalığın nedeni ancak 19. yüzyılda keşfedildi.'],['It is estimated that over one billion people lack access to clean water.','Bir milyardan fazla insanın temiz suya erişimi olmadığı tahmin ediliyor.']],
+ tuzak:['“It” her zaman bir şeye gönderme yapmaz; boş özneyse çeviride kaybolur.'],
+ quiz:[['It was not until 1928 ___ penicillin was discovered.',['when','that','which','since'],1,'Kalıp: It was not until X THAT Y.'],
+  ['“It is widely believed that diet affects mood.” en iyi çeviri?',['O, diyetin ruh halini etkilediğine yaygın olarak inanır.','Beslenmenin ruh halini etkilediğine yaygın olarak inanılıyor.','Beslenme ruh halini yaygın olarak etkiler.','Yaygın bir inanç beslenmeyi etkiler.'],1,'It is believed that = “… -dığına inanılıyor” (edilgen, boş özne).']]},
+{id:'paralel',g:'yapi',t:'Çift bağlaçlar ve paralel yapı',s:'both…and, either…or, neither…nor, not only…but also: iki taraf aynı yapıda olur.',k:'both and either or neither nor not only but also paralel',
+ sig:['\\bboth\\b[^.]*\\band\\b','\\beither\\b[^.]*\\bor\\b','\\bneither\\b[^.]*\\bnor\\b','\\bnot only\\b','\\bas well as\\b'],
+ tani:['both X and Y = hem X hem Y','either X or Y = ya X ya Y','neither X nor Y = ne X ne Y','not only X but (also) Y = sadece X değil, Y de','whether X or Y = X de olsa Y de olsa','X as well as Y = Y’nin yanı sıra X'],
+ cevir:[],ex:[['The disease affects not only the lungs but also the heart.','Hastalık sadece akciğerleri değil, kalbi de etkiler.']],
+ tuzak:['neither … nor zaten olumsuzdur; ayrıca not kullanılmaz.','Not only cümle başındaysa devrik gelir: “Not only does it …”.'],
+ quiz:[['The new drug is ___ cheaper ___ more effective than the old one.',['either / or','both / and','neither / or','not / but'],1,'“hem daha ucuz hem daha etkili” → both … and.'],
+  ['___ the government ___ the opposition supported the bill, so it failed.',['Both / and','Either / or','Neither / nor','Not only / but also'],2,'Tasarı başarısız oldu → kimse desteklemedi: Neither … nor.']]},
+{id:'zamanlar',g:'fiil',t:'Zamanlar: YDS’de kritik olanlar',s:'Zaman uyumu cümle tamamlama ve çeviride en çok kullanılan ipucudur.',k:'tense zaman present perfect past perfect future since for by the time',
+ sig:['\\b(has|have)\\s+(been\\s+)?\\w+(ed|en|wn|ght|ne|un|ung)\\b','\\bhad\\s+(been\\s+)?\\w+(ed|en|wn|ght|ne|un|ung)\\b','\\bwill have\\b','\\bby the time\\b','\\b(over|in|during) the (past|last)\\b'],
+ tani:['<b>Present perfect</b> (has / have V3): geçmişten bugüne. “-dı / -mıştır”. İpuçları: since, for, recently, so far, over the past decade.','<b>Past perfect</b> (had V3): geçmişteki bir olaydan DAHA ÖNCE. “-mıştı”. İpucu: by the time + past.','<b>Future perfect</b> (will have V3): gelecekteki bir noktaya kadar tamamlanmış. “-mış olacak”. İpucu: by 2050.','<b>Geniş zaman:</b> genel gerçekler, bilimsel bilgi. “-r / -dır”.','<b>Past simple:</b> geçmişte bitmiş, zamanı belli. İpuçları: in 1990, ago, last year.'],
+ cevir:['Önce zaman ifadelerini ara (since, by the time, until, ago, over the last …): zamanı bunlar ele verir.'],
+ ex:[['By the time the firefighters arrived, the building had collapsed.','İtfaiyeciler geldiğinde bina çökmüştü.'],['Global temperatures have risen by about 1°C since 1900.','Küresel sıcaklıklar 1900’den bu yana yaklaşık 1°C arttı.']],
+ tuzak:['since + geçmiş zaman, ana cümle present perfect: “has increased since it was introduced”.','by the time + geniş zaman → ana cümle will have V3; by the time + past → had V3.'],
+ quiz:[['Since the treatment was introduced, mortality rates ___ significantly.',['decreased','have decreased','had decreased','will decrease'],1,'since → ana cümle present perfect.'],
+  ['By the time the report was published, the company ___ its strategy.',['changes','has changed','had changed','will change'],2,'by the time + past → had V3.'],
+  ['By 2050, the world population ___ nearly 10 billion.',['reaches','reached','will have reached','had reached'],2,'Gelecekte bir noktaya kadar → will have V3.']]},
+{id:'edilgen',g:'fiil',t:'Edilgen yapı (Passive)',s:'be + V3: kimin yaptığı değil, ne yapıldığı önemli. Akademik metinlerde çok sık.',k:'passive edilgen be v3 is said to',
+ sig:['\\b(is|are|was|were|be|been|being)\\s+(\\w+ly\\s+)?\\w+(ed|en|wn|ght|ne|lt|pt|un|ung)\\b(?!\\s+(to|that)\\b)','\\b(is|are|was|were)\\s+(said|thought|believed|known|reported|considered|expected|estimated)\\s+to\\b'],
+ tani:['is / are / was / were + V3 · has been / had been + V3 · will be / can be / must be + V3 · is being + V3 (yapılmakta)','by + kişi = “… tarafından”','is said / believed / thought to V = “… -dığı söyleniyor / düşünülüyor”','is thought to have V3 = “… -mış olduğu düşünülüyor”'],
+ cevir:['Türkçede “-ıl / -ın” eki: is used = kullanılır · was found = bulundu · has been shown = gösterilmiştir.'],
+ ex:[['The vaccine is thought to have saved millions of lives.','Aşının milyonlarca hayat kurtarmış olduğu düşünülüyor.'],['More research needs to be done before the drug can be approved.','İlaç onaylanmadan önce daha fazla araştırma yapılması gerekiyor.']],
+ tuzak:['“is to V” (yapılacak / yapılmalı) edilgen değildir.','to V3 ile to have V3 farkı çeviri sorularında çıkar: “-dığı” ↔ “-mış olduğu”.'],
+ quiz:[['Thousands of new species ___ every year.',['discover','are discovered','are discovering','have discovered'],1,'Türler keşfedilir → edilgen.'],
+  ['The pyramids are believed ___ by skilled workers, not slaves.',['to build','to be built','to have been built','building'],2,'Geçmişte yapılmış + edilgen → to have been built.']]},
+{id:'modal',g:'fiil',t:'Modal’lar: kesinlik derecesi',s:'Çeviride “-ebilir” ile “-meli” farkı şıkkı değiştirir.',k:'modal may might could must should would have v3 olasılık',
+ sig:['\\b(may|might|could|must|should|would|cannot|can\'t|needn\'t|need not)\\s+(not\\s+)?have\\s+\\w+(ed|en|wn|ght|ne|un|ung)\\b','\\b(may|might|must|should|ought to)\\b'],
+ tani:['may / might / could + V = -ebilir (olasılık)','must + V = -meli (zorunluluk) ya da kesin çıkarım (“-iyor olmalı”)','can = -ebilir (yetenek / olanak); cannot = -emez','should / ought to = -meli (tavsiye) · would = -erdi','<b>may / might / could have V3</b> = -mış olabilir','<b>must have V3</b> = -mış olmalı (kesin çıkarım)','<b>should have V3</b> = -meliydi (ama yapmadı)','<b>could have V3</b> = -ebilirdi (ama olmadı)','<b>needn’t have V3</b> = gerek yoktu ama yaptı · <b>cannot have V3</b> = -mış olamaz'],
+ cevir:[],ex:[['The ancient city must have been abandoned after the earthquake.','Antik kent depremden sonra terk edilmiş olmalı.'],['The government should have acted sooner.','Hükümet daha erken harekete geçmeliydi.']],
+ tuzak:['may have V3 (olmuş olabilir) ≠ could have V3 (olabilirdi ama olmadı).','be able to = can; be likely to = muhtemelen -ecek.'],
+ quiz:[['The dinosaurs ___ extinct because of a meteor impact, but there are other theories.',['must have become','might have become','should have become','cannot have become'],1,'“Başka teoriler de var” → kesin değil, olasılık: might have V3.'],
+  ['“You should have consulted a doctor.” anlamı?',['Doktora danışmalısın.','Doktora danışmalıydın (ama danışmadın).','Doktora danışmış olabilirsin.','Doktora danışman gerekmedi.'],1,'should have V3 = yapılması gerekirdi ama yapılmadı.']]},
+{id:'ing-to',g:'fiil',t:'-ing / to V ve kalıplaşmış yapılar',s:'Fiilden sonra -ing mi, to V mi? Gramer sorularının klasiği.',k:'gerund infinitive ing to too enough used to likely tend',
+ sig:['\\b(is|are|was|were|be)\\s+(likely|unlikely|supposed|bound|expected|able)\\s+to\\b','\\btoo\\s+\\w+\\s+to\\b','\\b\\w+\\s+enough\\s+to\\b','\\bused to\\b','\\btends?\\s+to\\b','\\b(by|without|instead of|despite|before|after|in addition to)\\s+\\w+ing\\b'],
+ tani:['to V = amaç: “to reduce costs” = “maliyetleri düşürmek için”','be likely / unlikely to = muhtemelen -ecek / -meyecek','be supposed to = -mesi gerekiyor / bekleniyor','too + sıfat + to V = … -emeyecek kadar …','sıfat + enough to V = … -ecek kadar …','used to V = eskiden -erdi · be used to V-ing = -meye alışkın · be used to V = -mek için kullanılır','tend to V = -me eğiliminde','Edattan sonra hep V-ing: by doing (-erek), without doing (-meden), instead of, despite, before / after doing','-ing alanlar: avoid, enjoy, consider, involve, risk, deny, keep · to V alanlar: aim, attempt, fail, manage, tend, seem, refuse, decide'],
+ cevir:[],ex:[['The particles are too small to be seen with the naked eye.','Parçacıklar çıplak gözle görülemeyecek kadar küçük.'],['People tend to underestimate the risks they are used to living with.','İnsanlar birlikte yaşamaya alışkın oldukları riskleri hafife alma eğilimindedir.']],
+ tuzak:['“to” edat olduğunda ardından V-ing gelir: look forward to doing, be used to doing, contribute to doing, object to doing.'],
+ quiz:[['Many patients avoid ___ to the doctor until symptoms become serious.',['go','to go','going','gone'],2,'avoid + V-ing.'],
+  ['The bridge was not strong enough ___ heavy trucks.',['carrying','to carry','carry','carried'],1,'enough + to V.']]},
+{id:'zitlik',g:'baglac',t:'Zıtlık bağlaçları',s:'Cümle tamamlamada “beklenmedik sonuç” = zıtlık bağlacı.',k:'although though despite in spite of however whereas while nevertheless zıtlık',
+ sig:['\\b(although|though|even though|whereas|despite|in spite of|however|nevertheless|nonetheless|albeit|conversely|notwithstanding|on the other hand|in contrast|even so)\\b','\\bwhile\\b','\\byet\\b'],
+ tani:['<b>+ cümle:</b> although, even though, though, while, whereas, even if','<b>+ isim / V-ing:</b> despite, in spite of, notwithstanding','<b>Cümleler arası:</b> however, nevertheless, nonetheless, yet, still, on the other hand, in contrast, conversely','albeit + sıfat / zarf: “-se de”'],
+ cevir:['although / despite = “-e rağmen / -dığı halde” · while / whereas = “-iken / oysa” · however = “ancak, fakat”'],
+ ex:[['Although the treatment is expensive, it is widely used.','Tedavi pahalı olmasına rağmen yaygın olarak kullanılıyor.']],
+ tuzak:['despite cümle almaz → “despite the fact that + cümle”.','while “-iken” (zaman) anlamında da olabilir; bağlama bak.'],
+ quiz:[['___ the drug proved effective in trials, it was never approved because of its side effects.',['Because','Although','Unless','Since'],1,'Etkili ama onaylanmadı → beklenmedik sonuç: Although.'],
+  ['___ heavy investment, the project failed.',['Although','Despite','However','Even though'],1,'Ardından isim geliyor → Despite.']]},
+{id:'sebep',g:'baglac',t:'Sebep – sonuç bağlaçları',s:'Sebep mi, sonuç mu? Okun yönüne dikkat et.',k:'because due to owing to therefore thus hence result in lead to sebep sonuç',
+ sig:['\\b(because|due to|owing to|on account of|as a result|therefore|thus|hence|consequently|accordingly|now that|given that|thanks to)\\b','\\bso\\s+\\w+\\s+that\\b','\\b(results?|resulted|resulting)\\s+(in|from)\\b','\\b(lead|leads|led|leading)\\s+to\\b','\\b(stems?|stemmed|arises?|arose)\\s+from\\b'],
+ tani:['<b>Sebep + cümle:</b> because, since, as, now that, given that','<b>Sebep + isim:</b> because of, due to, owing to, on account of, as a result of, thanks to','<b>Sonuç:</b> so, therefore, thus, hence, consequently, as a result, accordingly','so / such … that = “o kadar … ki”','Sebep → sonuç: result in, lead to, cause, bring about · Sonuç ← sebep: result from, stem from, arise from'],
+ cevir:[],ex:[['The soil was so dry that nothing could grow.','Toprak o kadar kuruydu ki hiçbir şey yetişemiyordu.']],
+ tuzak:['since “-den beri” de olabilir; as “-dığı için / -iken / gibi” anlamlarına gelebilir.','so that = amaç (-sın diye); so = sonuç.'],
+ quiz:[['The experiment had to be repeated ___ the equipment was faulty.',['although','because','so that','unless'],1,'Ekipman bozuktu → sebep: because.'],
+  ['Air pollution can ___ serious respiratory diseases.',['result from','result in','stem from','arise from'],1,'Kirlilik (sebep) → hastalık (sonuç): result in.']]},
+{id:'kosul',g:'baglac',t:'Koşul cümleleri ve koşul bağlaçları',s:'if’in türü zamanı ve gerçekliği belirler.',k:'if conditional koşul unless provided otherwise were it not had it not been',
+ sig:['\\bif\\b','\\bunless\\b','\\b(provided|providing)( that)?\\b','\\bas long as\\b','\\bin case\\b','\\botherwise\\b','\\bwere it not\\b','\\bhad it not been\\b','\\bbut for\\b','^\\s*(had|were|should)\\s+(it|they|we|the|this|he|she|you|i)\\b'],
+ tani:['<b>Type 0 / 1:</b> If + geniş zaman → geniş zaman / will: gerçek olasılık. “-rsa … -r / -ecek”','<b>Type 2:</b> If + past → would V: şu anki hayali durum. “-saydı … -erdi”','<b>Type 3:</b> If + had V3 → would have V3: geçmişteki hayali durum. “-mış olsaydı … -mış olurdu”','<b>Karışık:</b> If + had V3 → would V (şimdi): “… -seydi şimdi -erdi”','unless = if not · provided (that) / as long as / on condition that = -mesi şartıyla · in case = -ihtimaline karşı · otherwise = aksi takdirde · even if = -se bile','<b>if’siz devrik:</b> Were it not for X / But for X = X olmasaydı · Had it not been for X = X olmasaydı (geçmiş) · Should you need = ihtiyacınız olursa'],
+ cevir:[],ex:[['Had the warning been taken seriously, the disaster could have been prevented.','Uyarı ciddiye alınsaydı felaket önlenebilirdi.']],
+ tuzak:['unless zaten olumsuzdur: “unless it does not …” deme.','Type 2 / 3 gerçek değildir: çeviride “aslında olmadı” anlamını koru.'],
+ quiz:[['If the company ___ more in research, it would not have lost its market share.',['invests','invested','had invested','would invest'],2,'would have V3 → Type 3: If + had V3.'],
+  ['___ the support of volunteers, the project would have failed.',['Unless','Were it not','Had it not been for','Provided'],2,'Geçmişteki hayali durum + isim → Had it not been for.'],
+  ['The drug is safe ___ it is taken in the recommended dose.',['unless','provided that','in case','otherwise'],1,'“… alınması şartıyla güvenli” → provided that.']]},
+{id:'amac',g:'baglac',t:'Amaç bağlaçları',s:'“-mek için / -sın diye”.',k:'amaç so that in order to so as to lest',
+ sig:['\\bin order to\\b','\\bso as (not )?to\\b','\\bso that\\b','\\bin order that\\b','\\bfor fear that\\b','\\blest\\b','\\bwith a view to\\b'],
+ tani:['to V · in order to V · so as to V (olumsuz: so as not to)','so that + cümle (can / could / will / would ile) = -sın diye, -ebilmek için','in order that · for fear that / lest = -mesin diye','with a view to V-ing = -mek amacıyla'],
+ cevir:[],ex:[['Samples were stored at low temperatures so that they would not deteriorate.','Numuneler bozulmasın diye düşük sıcaklıkta saklandı.']],
+ tuzak:['so that (amaç) ≠ so … that (o kadar … ki).'],
+ quiz:[['The data were anonymised ___ participants could not be identified.',['so that','such that','in order to','because'],0,'Ardından cümle + amaç → so that.'],
+  ['Researchers wore protective suits ___ contaminate the samples.',['so as not to','in order to','so that','so as'],0,'Amaç olumsuz + fiil → so as not to.']]},
+{id:'karsilastirma',g:'baglac',t:'Karşılaştırmalar',s:'Şıklarda “daha az / daha çok” ve “kadar” karışır; dikkat.',k:'comparative than as as the more the more karşılaştırma',
+ sig:['\\bthe\\s+(more|less|\\w+er)\\b[^.]*,\\s*the\\s+(more|less|\\w+er)\\b','\\bas\\s+\\w+\\s+as\\b','\\b(more|less|fewer)\\b[^.]{0,40}\\bthan\\b','\\b\\w+er\\s+than\\b','\\b(twice|three times|half)\\s+as\\b'],
+ tani:['-er / more … than = -den daha · less … than = -den daha az','as … as = … kadar · not as / so … as = … kadar değil','the -est / the most = en','the more …, the more … = ne kadar çok … o kadar çok','twice as … as = iki katı · much / far / considerably + -er = çok daha','no longer = artık … değil · no more than = en fazla, sadece'],
+ cevir:[],ex:[['The more people use public transport, the less traffic there will be.','İnsanlar toplu taşımayı ne kadar çok kullanırsa o kadar az trafik olur.']],
+ tuzak:['“not as … as” → “… kadar … değil”: olumsuzluğu kaybetme.','less sayılamayan, fewer sayılabilen isimle kullanılır.'],
+ quiz:[['___ a material is, the more heat it can store.',['Denser','The denser','The densest','As dense'],1,'the + -er …, the more … yapısı.'],
+  ['The new model uses ___ energy than the old one.',['fewer','less','least','little'],1,'energy sayılamaz + than → less.']]},
+{id:'devrik',g:'ozel',t:'Devrik yapı (Inversion)',s:'Olumsuz / sınırlayıcı ifade cümle başına gelince soru düzeni kurulur; vurgu yapar.',k:'inversion devrik never rarely hardly no sooner only after not until',
+ sig:['^\\s*(never|rarely|seldom|little|hardly|scarcely|barely|nowhere|under no circumstances|in no way|at no time)\\s+(do|does|did|is|are|was|were|has|have|had|can|could|will|would|should|must)\\b','^\\s*not only\\s+(do|does|did|is|are|was|were|has|have|had|can|could|will|would)\\b','^\\s*only\\s+(after|when|if|by|then|in|once|recently)\\b[^.]*\\b(do|does|did|is|are|was|were|has|have|had|can|could|will|would)\\s+\\w+','^\\s*not until\\b','\\bno sooner\\b','^\\s*so\\s+\\w+\\s+(is|are|was|were)\\b'],
+ tani:['Never / Rarely / Seldom / Little + yardımcı fiil + özne: “Never have I seen …” = “Hiç … görmedim.”','Not only + did … but also = “Sadece … değil …”','Hardly / Scarcely … when; No sooner … than = “… -er -mez”','Only after / when / if … + devrik = “Ancak … -dıktan sonra”','Not until … + devrik = “Ancak … olunca”','Under no circumstances = “Hiçbir koşulda” · So + sıfat + be + özne + that = “O kadar … ki”'],
+ cevir:[],ex:[['No sooner had the experiment started than the power went out.','Deney başlar başlamaz elektrik kesildi.'],['Only after the data were reanalysed did the error become clear.','Hata ancak veriler yeniden analiz edildikten sonra ortaya çıktı.']],
+ tuzak:['Devrik cümle soru değildir; soru işareti arama.','Little did they know = “hiç bilmiyorlardı” (olumsuz anlam).'],
+ quiz:[['Rarely ___ such a rapid recovery in a patient.',['doctors see','do doctors see','doctors do see','did doctors saw'],1,'Rarely başta → devrik: do + özne + V.'],
+  ['“Hardly had the meeting begun when the fire alarm went off.” anlamı?',['Toplantı zar zor başladı ve alarm çaldı.','Toplantı başlar başlamaz yangın alarmı çaldı.','Toplantı başlamadan alarm çaldı.','Toplantı başladığında alarm çalmıyordu.'],1,'Hardly … when = “-er -mez”.']]},
+{id:'zamir',g:'ozel',t:'Zamirler ve gönderim (this, they, the former / latter)',s:'Paragraf, cloze ve anlam bütünlüğü sorularında “bu kime gidiyor?” sorusu çözer.',k:'zamir pronoun reference this these former latter they it gönderim',
+ sig:['\\bthe (former|latter)\\b','\\b(this|these|such)\\s+(finding|findings|result|results|approach|method|process|problem|view|idea|phenomenon|trend|change|changes|effect|effects|study|discovery)\\b','\\bdo so\\b'],
+ tani:['this / these + isim = önceki cümledeki fikre gönderme: “This finding …” = “Bu bulgu …”','they / them / their = önceki çoğul isim · it / its = tekil isim','the former = ilki · the latter = ikincisi','such + isim = böyle bir · do so = bunu yapmak · one / ones = aynı türden biri'],
+ cevir:['Zamiri gördüğünde önceki cümlede kime gittiğini bul; gerekirse çeviride açıkça yaz.'],
+ ex:[['Both coffee and tea contain caffeine, but the latter also contains antioxidants.','Hem kahve hem çay kafein içerir, ancak ikincisi (çay) antioksidan da içerir.']],
+ tuzak:['Paragraf tamamlama ve anlamı bozan cümle sorularında zamir uyumu (tekil / çoğul) en hızlı eleme yöntemidir.'],
+ quiz:[['Plants and animals both need water, but ___ can also produce their own food.',['the former','the latter','the formers','they latter'],0,'Kendi besinini üreten bitkiler = ilk söylenen → the former.'],
+  ['“Many cities have introduced bike lanes. This has reduced traffic.” “This” neyi gösteriyor?',['şehirleri','bisiklet yollarının getirilmesini','trafiği','bisikletleri'],1,'this önceki cümlenin fikrini (bisiklet yolu getirilmesi) gösterir.']]}
+];
+GRAMMAR.forEach(c=>{ c._re=(c.sig||[]).map(s=>{ try{ return new RegExp(s,'i'); }catch(e){ return null; } }).filter(Boolean); c._txt=norm([c.t,c.s,c.k,...c.tani,...c.cevir,...c.tuzak,...c.ex.flat()].join(' ').replace(/<[^>]+>/g,' ')); });
+const cardById=id=>GRAMMAR.find(c=>c.id===id);
+function splitSent(t){ return String(t||'').replace(/\s+/g,' ').split(/(?<=[.!?])\s+(?=[A-Z“"(])/).map(s=>s.trim()).filter(Boolean); }
+function detectIn(sentence){ const out=[]; for(const c of GRAMMAR){ for(const r of c._re){ const m=r.exec(sentence); if(m){ out.push({c, m:m[0]}); break; } } } return out; }
+function detectStructures(text){
+  const res=new Map();
+  splitSent(text).forEach(s=>detectIn(s).forEach(({c,m})=>{ const e=res.get(c.id)||{c,n:0,ex:[]}; e.n++; if(e.ex.length<3) e.ex.push(m.trim()); res.set(c.id,e); }));
+  return [...res.values()].sort((a,b)=>b.n-a.n);
+}
+function structChips(text, small){
+  const d=detectStructures(text); if(!d.length) return small?'':'<p class="small muted" style="margin:0">Belirgin bir yapı bulunamadı.</p>';
+  return `<div class="row" style="gap:6px">${d.map(e=>`<button class="btn sm ${small?'ghost':''}" data-act="openCard" data-id="${e.c.id}" title="${esc(e.ex.join(' · '))}">${small?'':'📘 '}${esc(e.c.t.split(':')[0].split('(')[0].trim())}${small?'':' <span class="muted">×'+e.n+'</span>'}</button>`).join('')}</div>`;
+}
+
+/* ---------- Rehber view ---------- */
+function vRehber(){
+  const R=S.r;
+  if(R.open){ const c=cardById(R.open); if(c) return rehberCard(c); R.open=null; }
+  $('#main').innerHTML=`<div class="stack">
+  <div class="card stack"><div><h2 style="margin:0">Rehber</h2><div class="small muted">Metin çevirirken takıldığın yapıyı buradan bul. Her kartta tanıma ipuçları, çeviri kalıbı, YDS tuzakları ve mini test var.</div></div>
+    <input class="in" id="rQ" placeholder="🔎 Metinde ne gördün? ör. which, had been, unless, despite, -ing" value="${esc(R.q)}">
+    <div class="row" id="rG"><button class="btn sm ${!R.g?'pri':''}" data-g="">Hepsi</button>${Object.entries(GROUPS).map(([k,v])=>`<button class="btn sm ${R.g===k?'pri':''}" data-g="${k}">${v}</button>`).join('')}</div>
+  </div>
+  <details class="card" id="scanBox" ${R.scan?'open':''}><summary>🧭 Yapı tarayıcı — cümleyi yapıştır, içindeki yapıları bulayım</summary>
+    <textarea class="in" id="scanIn" rows="3" style="margin-top:10px" placeholder="Takıldığın cümleyi buraya yapıştır…">${esc(R.scan||'')}</textarea>
+    <div id="scanOut" style="margin-top:10px"></div></details>
+  <div id="rList" class="grid g2"></div></div>`;
+  $('#rQ').oninput=e=>{ R.q=e.target.value; rList(); };
+  $('#rG').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; R.g=b.dataset.g; [...$('#rG').children].forEach(x=>x.classList.toggle('pri',x===b)); rList(); };
+  const scan=()=>{ R.scan=$('#scanIn').value; $('#scanOut').innerHTML=R.scan.trim()?structChips(R.scan):''; };
+  $('#scanIn').oninput=scan; scan(); rList();
+}
+function rList(){
+  const R=S.r, el=$('#rList'); if(!el) return; const q=norm(R.q); const words=q.split(' ').filter(Boolean);
+  const L=GRAMMAR.filter(c=>(!R.g||c.g===R.g)&&(!q||words.every(w=>c._txt.includes(w))||c._re.some(r=>r.test(R.q))));
+  el.innerHTML=L.length?L.map(c=>{ const n=S.gnotes[c.id]; return `<div class="item" data-act="openCard" data-id="${c.id}" style="margin:0"><div class="small muted">${GROUPS[c.g]}</div><div class="en" style="font-size:16px">${esc(c.t)}</div><div class="small muted">${esc(c.s)}</div><div class="row small" style="margin-top:6px;gap:6px">${c.quiz.length?`<span class="chip ${n&&n.best===c.quiz.length?'kalip':'src'}">${n&&n.best!=null?`test ${n.best}/${c.quiz.length}`:`${c.quiz.length} soruluk test`}</span>`:''}${n&&n.text?'<span class="chip src">📝 notun var</span>':''}</div></div>`; }).join(''):'<div class="card empty" style="grid-column:1/-1"><p class="muted">Eşleşen not yok. Başka bir kelimeyle dene.</p></div>';
+}
+function rehberCard(c){
+  const R=S.r, n=S.gnotes[c.id]||{}, Q=R.quiz&&R.quiz.id===c.id?R.quiz:null;
+  const li=a=>a.length?`<ul style="margin:6px 0 0;padding-left:20px">${a.map(x=>`<li style="margin:4px 0">${x}</li>`).join('')}</ul>`:'';
+  let quizHTML='';
+  if(c.quiz.length){
+    if(!Q) quizHTML=`<div class="row"><button class="btn pri" data-act="cardQuiz" data-id="${c.id}">✅ Mini testi başlat (${c.quiz.length} soru)</button>${n.best!=null?`<span class="small muted">En iyi: ${n.best}/${c.quiz.length}</span>`:''}</div>`;
+    else if(Q.i>=c.quiz.length) quizHTML=`<div class="fb ${Q.ok===c.quiz.length?'ok':'no'}"><b>${Q.ok}/${c.quiz.length}</b> doğru. ${Q.ok===c.quiz.length?'Harika! 🎉':'Notları bir daha oku, sonra tekrar dene.'}</div><div class="row" style="margin-top:8px"><button class="btn" data-act="cardQuiz" data-id="${c.id}">Tekrar çöz</button></div>`;
+    else { const [q,opts,a,why]=c.quiz[Q.i]; quizHTML=`<div class="small muted">Soru ${Q.i+1}/${c.quiz.length}</div><div style="font-weight:600;margin-top:4px">${esc(q)}</div><div class="opts">${opts.map((o,k)=>`<button class="opt ${Q.ans!=null?(k===a?'right':(k===Q.ans?'wrong':'')):''}" data-act="cardAns" data-k="${k}"><kbd>${String.fromCharCode(65+k)}</kbd>${esc(o)}</button>`).join('')}</div>${Q.ans!=null?`<div class="fb ${Q.ans===a?'ok':'no'}">${Q.ans===a?'✓ Doğru! ':'✗ '}${esc(why)}</div><div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn pri" data-act="cardNext">Devam →</button></div>`:''}`; }
+  }
+  $('#main').innerHTML=`<div class="stack" style="max-width:820px;margin:0 auto">
+  <div class="card stack"><div class="row"><button class="btn sm ghost" data-act="cardBack">← ${R.back==='metin'?'Metne dön':'Rehber'}</button><span class="small muted sp">${GROUPS[c.g]}</span></div>
+    <div><h2 style="margin:0 0 4px">${esc(c.t)}</h2><div class="muted">${esc(c.s)}</div></div>
+    ${c.tani.length?`<div><h3 style="margin:0">👀 Nasıl tanırım?</h3>${li(c.tani)}</div>`:''}
+    ${c.cevir.length?`<div><h3 style="margin:0">${c.g==='yontem'?'🧭 Adımlar':'🔁 Nasıl çeviririm?'}</h3>${li(c.cevir)}</div>`:''}
+    ${c.ex.length?`<div><h3 style="margin:0 0 6px">📌 Örnek</h3>${c.ex.map(([e,t])=>`<div class="sent"><div class="ex">${esc(e)}</div><div class="tr">${esc(t)}</div></div>`).join('')}</div>`:''}
+    ${c.tuzak.length?`<div class="fb no" style="margin:0"><b>⚠️ YDS tuzakları</b>${li(c.tuzak.map(esc))}</div>`:''}
+  </div>
+  ${c.quiz.length?`<div class="card stack" id="cardQuizBox"><h3 style="margin:0">Mini test</h3>${quizHTML}</div>`:''}
+  <div class="card stack"><h3 style="margin:0">📝 Notlarım</h3><textarea class="in" id="gNote" rows="5" placeholder="Hocanın bu konuda söyledikleri, kendi örneklerin…">${esc(n.text||'')}</textarea><div class="row"><button class="btn sm" data-act="saveGNote" data-id="${c.id}">Kaydet</button><span class="small muted" id="gNoteMsg"></span></div></div>
+  <div class="row" style="justify-content:space-between">${(()=>{ const i=GRAMMAR.indexOf(c), p=GRAMMAR[i-1], x=GRAMMAR[i+1]; return (p?`<button class="btn sm ghost" data-act="openCard" data-id="${p.id}">← ${esc(p.t.split(':')[0].split('(')[0])}</button>`:'<span></span>')+(x?`<button class="btn sm ghost" data-act="openCard" data-id="${x.id}">${esc(x.t.split(':')[0].split('(')[0])} →</button>`:''); })()}</div>
+  </div>`;
+  const ta=$('#gNote'); ta.addEventListener('blur', ()=>saveGNoteFrom(c.id, true));
+}
+function saveGNoteFrom(id, quiet){ const ta=$('#gNote'); if(!ta) return; const n={...(S.gnotes[id]||{card:id})}; const v=ta.value.trim(); if((n.text||'')===v) return; n.text=v; n.updated=Date.now(); saveGNote(n); const m=$('#gNoteMsg'); if(m) m.textContent='Kaydedildi ✓'; if(!quiet) toast('Not kaydedildi ✓'); }
+function saveGNote(n){ S.gnotes[n.card]=n; persist('g_'+n.card, {...n, kind:'gnote'}); }
+
+/* ---------- Denemeler ---------- */
+const SECTIONS=[['kelime','Kelime',6],['gramer','Dil bilgisi',10],['cloze','Cloze test',10],['cumle','Cümle tamamlama',10],['ceviri','Çeviri',6],['okuma','Okuma (paragraf)',20],['diyalog','Diyalog',5],['yakin','Yakın anlam',4],['ptamam','Paragraf tamamlama',4],['bozan','Anlamı bozan cümle',5]];
+const SEC_CARD={gramer:'zamanlar',cloze:'zitlik',cumle:'sebep',ceviri:'ceviri-sorusu',okuma:'asil-yuklem',yakin:'ceviri-yontemi',ptamam:'zamir',bozan:'zamir',kelime:'kelime-turu'};
+const examScore=e=>Math.round(e.total*1.25*100)/100;
+function saveExam(e){ const i=S.exams.findIndex(x=>x.id===e.id); if(i<0) S.exams.push(e); else S.exams[i]=e; S.exams.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.created-b.created); persist(e.id,{...e,kind:'exam'}); }
+function deleteExam(id){ S.exams=S.exams.filter(x=>x.id!==id); persist(id,null); }
+function examCard(){
+  const E=S.exams, tgt=S.stats.target||55, need=Math.ceil(tgt/1.25);
+  if(!E.length) return `<div class="card"><div class="row"><h3 class="sp" style="margin:0">📊 Denemelerim</h3><button class="btn sm pri" data-act="addExam">+ Deneme ekle</button></div><p class="small muted" style="margin:8px 0 0">YDS’de yanlışlar doğruyu götürmez; her doğru 1,25 puan. <b>${tgt} puan için ${need} doğru</b> lazım. Çözdüğün denemeleri bölüm bölüm gir, en çok nerede puan kaybettiğini göstereyim.</p></div>`;
+  const last=E[E.length-1], best=Math.max(...E.map(examScore));
+  const pts=E.slice(-12), W=300, H=110, pad=8;
+  const xy=pts.map((e,i)=>[pad+(pts.length===1?(W-2*pad)/2:i*(W-2*pad)/(pts.length-1)), H-pad-(examScore(e)/100)*(H-2*pad)]);
+  const ty=H-pad-(tgt/100)*(H-2*pad);
+  const agg={}; E.slice(-5).forEach(e=>{ if(!e.sec) return; SECTIONS.forEach(([k,,mx])=>{ const v=e.sec[k]; if(v==null||v==='') return; agg[k]=agg[k]||{c:0,t:0}; agg[k].c+=+v; agg[k].t+=mx; }); });
+  const weak=SECTIONS.filter(([k])=>agg[k]&&agg[k].t).map(([k,l])=>({k,l,p:agg[k].c/agg[k].t})).sort((a,b)=>a.p-b.p).slice(0,3);
+  return `<div class="card stack"><div class="row"><h3 class="sp" style="margin:0">📊 Denemelerim</h3><button class="btn sm pri" data-act="addExam">+ Deneme ekle</button></div>
+  <div class="row" style="gap:20px"><div><div class="small muted">Son deneme</div><div class="big" style="color:${examScore(last)>=tgt?'var(--ok)':'var(--acc)'}">${examScore(last)}</div><div class="small muted">${last.total}/80 doğru</div></div><div><div class="small muted">En iyi</div><div class="big">${best}</div></div><div class="sp small muted">${examScore(last)>=tgt?`🎉 Hedefin üstündesin!`:`Hedefe <b>${Math.max(0,need-last.total)}</b> doğru kaldı`}</div></div>
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;max-height:160px"><line x1="0" x2="${W}" y1="${ty}" y2="${ty}" stroke="var(--ok)" stroke-dasharray="4 4" stroke-width="1"/><text x="${W-2}" y="${ty-4}" text-anchor="end" font-size="9" fill="var(--ok)">hedef ${tgt}</text>${xy.length>1?`<polyline fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round" points="${xy.map(p=>p.join(',')).join(' ')}"/>`:''}${xy.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="var(--acc)"><title>${esc(pts[i].name||'')} ${examScore(pts[i])}</title></circle>`).join('')}</svg>
+  ${weak.length?`<div><div class="small muted" style="margin-bottom:6px">En çok puan kaybettiğin bölümler (son 5 deneme)</div>${weak.map(w=>`<div class="row" style="margin:4px 0"><span style="width:150px" class="small">${w.l}</span><div class="prog" style="max-width:200px"><i style="width:${Math.round(w.p*100)}%;background:${w.p<.5?'var(--bad)':w.p<.7?'var(--gold)':'var(--ok)'}"></i></div><span class="small muted">%${Math.round(w.p*100)}</span>${SEC_CARD[w.k]?`<button class="btn sm ghost" data-act="openCard" data-id="${SEC_CARD[w.k]}">📘 ilgili not</button>`:''}</div>`).join('')}</div>`:''}
+  <details><summary class="small">Tüm denemeler (${E.length})</summary>${E.slice().reverse().map(e=>`<div class="row small" style="padding:6px 0;border-top:1px solid var(--line)"><b>${examScore(e)}</b><span>${e.total}/80</span><span class="muted sp">${esc(e.name||'Deneme')} · ${esc(e.date||'')}</span><button class="btn sm ghost" data-act="editExam" data-id="${e.id}">✎</button><button class="btn sm ghost" data-act="delExam" data-id="${e.id}" style="color:var(--bad)">✕</button></div>`).join('')}</details></div>`;
+}
+function examModal(id){
+  const e=S.exams.find(x=>x.id===id)||{id:newId('e'),name:'',date:today(),sec:{},total:0,created:Date.now()};
+  modal(`<div class="row"><h2 class="sp" style="margin:0">${id?'Denemeyi düzenle':'Deneme ekle'}</h2><button class="btn sm ghost" data-close>✕</button></div>
+  <div class="grid g2" style="gap:10px"><div><label class="f">Ad</label><input class="in" id="xName" value="${esc(e.name)}" placeholder="ör. 2024 Sonbahar YDS"></div><div><label class="f">Tarih</label><input class="in" type="date" id="xDate" value="${esc(e.date)}"></div></div>
+  <div><label class="f">Bölüm bölüm doğru sayısı (bilmediklerini boş bırak)</label>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px">${SECTIONS.map(([k,l,mx])=>`<div class="row" style="gap:6px;flex-wrap:nowrap"><span class="small sp">${l} <span class="muted">/${mx}</span></span><input class="in" type="number" min="0" max="${mx}" data-sec="${k}" value="${e.sec&&e.sec[k]!=null?e.sec[k]:''}" style="width:68px;padding:6px 8px"></div>`).join('')}</div></div>
+  <div><label class="f">…ya da sadece toplam doğru</label><input class="in" type="number" min="0" max="80" id="xTotal" value="${e.sec&&Object.keys(e.sec).length?'':(e.total||'')}" placeholder="0–80" style="width:120px"></div>
+  <div class="row"><div class="sp"><span class="big" id="xScore" style="font-size:28px">0</span> <span class="muted small">puan</span></div><button class="btn" data-close>Vazgeç</button><button class="btn pri" id="xSave">Kaydet</button></div>`);
+  const calc=()=>{ const sec={}; let sum=0, any=false; $('#modal').querySelectorAll('[data-sec]').forEach(i=>{ if(i.value!==''){ const mx=+i.max; const v=Math.max(0,Math.min(mx,+i.value||0)); sec[i.dataset.sec]=v; sum+=v; any=true; } }); const total=any?sum:Math.max(0,Math.min(80,+$('#xTotal').value||0)); $('#xScore').textContent=Math.round(total*1.25*100)/100; return {sec:any?sec:{}, total}; };
+  $('#modal').querySelectorAll('input').forEach(i=>i.addEventListener('input',calc)); calc();
+  $('#modal').querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
+  $('#xSave').onclick=()=>{ const r=calc(); if(!r.total){ toast('Doğru sayısını gir.'); return; } const prevBest=S.exams.length?Math.max(...S.exams.map(examScore)):0; saveExam({...e, name:$('#xName').value.trim(), date:$('#xDate').value||today(), sec:r.sec, total:r.total}); closeModal(); if(!id){ addXp(30); if(r.total*1.25>prevBest && S.exams.length>1){ confetti(); toast('🏆 Yeni deneme rekoru!'); } } render(); };
 }
 
 /* ---------- actions ---------- */
@@ -926,6 +1182,15 @@ const ACT={
   peek:b=>{ const d=document.querySelector(`[data-peek="${b.dataset.k}"]`); if(d){ d.hidden=false; b.remove(); } },
   addA:b=>{ const t=S.texts.find(x=>x.id===b.dataset.id); const x=t&&t.analysis.items[+b.dataset.k]; if(!x||findDup(x.en)) return; saveItem(itemFromA(t,x)); addXp(2,b); toast('Eklendi ✓ '+x.en); render(); },
   addAllA:b=>{ const t=S.texts.find(x=>x.id===b.dataset.id); if(!t) return; let n=0; t.analysis.items.forEach(x=>{ if(!findDup(x.en)){ saveItem(itemFromA(t,x)); n++; } }); if(n) addXp(Math.min(n*2,40),b); toast(n?n+' öğe defterine eklendi ✓':'Hepsi zaten defterinde ✓'); render(); },
+  openCard:b=>{ const v=S.view; S.r.open=b.dataset.id; S.r.quiz=null; if(v!=='rehber') S.r.back=v; if(v!=='rehber') go('rehber'); else { render(); window.scrollTo(0,0); } },
+  cardBack:()=>{ const bk=S.r.back; S.r.open=null; S.r.quiz=null; S.r.back=null; if(bk&&bk!=='rehber') go(bk); else render(); },
+  cardQuiz:b=>{ S.r.quiz={id:b.dataset.id,i:0,ans:null,ok:0}; render(); const q=$('#cardQuizBox'); q&&q.scrollIntoView({block:'start',behavior:'smooth'}); },
+  cardAns:b=>{ const Q=S.r.quiz; if(!Q||Q.ans!=null) return; const c=cardById(Q.id); Q.ans=+b.dataset.k; const ok=Q.ans===c.quiz[Q.i][2]; if(ok) Q.ok++; render(); if(ok) addXp(8,$('.opt.right')); },
+  cardNext:()=>{ const Q=S.r.quiz; if(!Q) return; const c=cardById(Q.id); Q.i++; Q.ans=null; if(Q.i>=c.quiz.length){ const n={...(S.gnotes[c.id]||{card:c.id,text:''})}; if(n.best==null||Q.ok>n.best){ n.best=Q.ok; n.updated=Date.now(); saveGNote(n); } if(Q.ok===c.quiz.length) confetti(); } render(); },
+  saveGNote:b=>saveGNoteFrom(b.dataset.id,false),
+  addExam:()=>examModal(null),
+  editExam:b=>examModal(b.dataset.id),
+  delExam:async b=>{ if(await ask('Bu deneme silinsin mi?','Sil')){ deleteExam(b.dataset.id); render(); } },
   hlTip:b=>{ const it=S.items.find(x=>x.id===b.dataset.id); if(it) toast(it.en+' — '+it.tr, 3500); }
 };
 document.addEventListener('click', e=>{
