@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>YDS Defterim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f1ea;--card:#fffdf9;--ink:#1c2230;--muted:#6d6a64;--line:#e6dfd2;
+  --acc:#d9622b;--acc-soft:#fbe6da;--ok:#2d7a5f;--ok-soft:#dcefe6;--bad:#c23b36;--bad-soft:#f8dedc;
+  --kal:#4a5bd1;--kal-soft:#e3e6fb;--kel:#a6621a;--kel-soft:#f6e8d3;--gold:#e7a627;
+  --r:16px;--sh:0 1px 2px rgba(30,25,15,.06),0 4px 16px rgba(30,25,15,.06);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#15171c;--card:#1e2128;--ink:#ece8e1;--muted:#a19c93;--line:#2e323b;
+  --acc:#ef7a43;--acc-soft:#3a2519;--ok:#4cb48b;--ok-soft:#183128;--bad:#ea6a63;--bad-soft:#3a1d1c;
+  --kal:#8c99ff;--kal-soft:#252a4a;--kel:#e0a560;--kel-soft:#3a2c1a;--sh:0 1px 2px rgba(0,0,0,.3);
+}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,sans-serif;padding-bottom:84px;-webkit-tap-highlight-color:transparent}
+h1,h2,h3,.brand,.big{font-family:"Bricolage Grotesque","DM Sans",sans-serif;letter-spacing:-.01em}
+h1{font-size:28px;margin:0 0 4px}h2{font-size:21px;margin:0 0 12px}h3{font-size:17px;margin:0 0 8px}
+a{color:var(--acc)}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 16px;flex-wrap:wrap}
+.brand{font-size:20px;font-weight:800;white-space:nowrap}.brand b{color:var(--acc)}
+.hud{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:13px;font-weight:700}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 10px;white-space:nowrap}
+.lvbar{width:56px;height:6px;border-radius:9px;background:var(--line);overflow:hidden}.lvbar i{display:block;height:100%;background:var(--acc);border-radius:9px;transition:width .5s}
+.sync{font-size:12px;color:var(--muted);font-weight:500}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav.tabs a{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;color:var(--muted);font-size:12px;font-weight:700;padding:4px;border-radius:12px}
+nav.tabs a span{font-size:20px;line-height:1.2}
+nav.tabs a.on{color:var(--acc);background:var(--acc-soft)}
+@media (min-width:760px){
+  body{padding-bottom:30px}
+  nav.tabs{position:sticky;top:53px;bottom:auto;justify-content:center;gap:6px;background:transparent;border:0;padding:12px}
+  nav.tabs a{flex-direction:row;gap:6px;max-width:none;flex:0 0 auto;padding:7px 14px;font-size:14px;background:var(--card);border:1px solid var(--line)}
+  nav.tabs a span{font-size:16px}
+  nav.tabs a.on{border-color:var(--acc)}
+}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.stack>*+*{margin-top:14px}
+.muted{color:var(--muted)}.small{font-size:13px}.center{text-align:center}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 15px;font-weight:700;cursor:pointer;transition:transform .08s,background .15s;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--muted)}.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:10px}
+.btn.lg{padding:14px 22px;font-size:17px;border-radius:14px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.ai-only{display:none!important}.ai-txt{display:none}body.has-ai .ai-txt{display:inline}body.has-ai .ai-only{display:inline-flex!important}
+body.has-ai .no-ai{display:none!important}
+.ai{background:linear-gradient(135deg,#6d5bd0,#c2569b);border:0;color:#fff}
+label.f{display:block;font-size:13px;font-weight:700;color:var(--muted);margin:0 0 4px}
+.in{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;outline:none}
+.in:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+textarea.in{min-height:90px;resize:vertical}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 14px;border-radius:9px;font-weight:700;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
+.chip{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:99px}
+.chip.kelime{background:var(--kel-soft);color:var(--kel)}.chip.kalip{background:var(--kal-soft);color:var(--kal)}
+.chip.src{background:var(--bg);color:var(--muted);border:1px solid var(--line);text-transform:none;letter-spacing:0;font-weight:600}
+.hero{background:linear-gradient(135deg,var(--acc),#b8432a);color:#fff;border:0}
+.hero .muted{color:rgba(255,255,255,.8)}
+.hero .btn{background:#fff;color:#b8432a;border:0}
+.big{font-size:40px;font-weight:800;line-height:1}
+.stat .big{font-size:30px}
+.ring{--p:0;width:92px;height:92px;border-radius:50%;background:conic-gradient(#fff calc(var(--p)*1%),rgba(255,255,255,.25) 0);display:grid;place-items:center;flex:none}
+.ring>div{width:72px;height:72px;border-radius:50%;background:#c9502a;display:grid;place-items:center;font-weight:800;font-size:15px;text-align:center;line-height:1.1}
+.week{display:flex;gap:8px;align-items:flex-end;height:110px}
+.week div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;font-size:11px;color:var(--muted)}
+.week i{display:block;width:100%;max-width:34px;border-radius:7px 7px 3px 3px;background:var(--acc);min-height:3px}
+.week .goalhit i{background:var(--ok)}
+.boxes{display:flex;height:16px;border-radius:9px;overflow:hidden;background:var(--line)}
+.boxes i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend b{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.item{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--card);cursor:pointer}
+.item+.item{margin-top:8px}
+.item .en{font-weight:800;font-size:17px}
+.item .tr{color:var(--muted)}
+.item .more{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:14px}
+.dots{display:inline-flex;gap:3px}.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--ok)}
+.ex{font-style:italic}
+.empty{text-align:center;padding:34px 18px}
+.empty .big{font-size:48px;margin-bottom:6px}
+.game-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.prog{flex:1;height:8px;background:var(--line);border-radius:9px;overflow:hidden}.prog i{display:block;height:100%;background:var(--acc);transition:width .3s}
+.flash{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;user-select:none;padding:28px 20px}
+.flash .w{font-family:"Bricolage Grotesque",sans-serif;font-size:34px;font-weight:800;line-height:1.15;word-break:break-word}
+.flash .m{font-size:22px;font-weight:700;color:var(--acc);margin-top:14px}
+.flash hr{width:60%;border:0;border-top:1px dashed var(--line);margin:16px auto}
+.opts{display:grid;gap:10px;margin-top:14px}
+.opt{text-align:left;border:2px solid var(--line);background:var(--card);border-radius:14px;padding:13px 16px;font-weight:600;cursor:pointer;font-size:16px}
+.opt:hover{border-color:var(--muted)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt kbd{display:inline-block;min-width:22px;text-align:center;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;margin-right:8px;font-family:inherit}
+.fb{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:15px}
+.fb.ok{background:var(--ok-soft)}.fb.no{background:var(--bad-soft)}
+.combo{font-weight:800;color:var(--acc)}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:12px;min-height:58px;font-weight:700;cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
+.tile.sel{border-color:var(--acc);background:var(--acc-soft)}
+.tile.done{opacity:0;pointer-events:none;transform:scale(.9)}
+.tile.shake{animation:shake .35s;border-color:var(--bad)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.gap{font-size:19px;line-height:1.6}
+.gap .blank{display:inline-block;min-width:90px;border-bottom:3px solid var(--acc);margin:0 2px}
+.gap .fill{color:var(--ok);font-weight:800;border-bottom:3px solid var(--ok)}
+.games .card{display:flex;flex-direction:column;gap:6px}
+.games .ic{font-size:30px}
+mark.hl{background:var(--acc-soft);color:inherit;border-bottom:2px solid var(--acc);border-radius:3px;padding:0 1px;cursor:help}
+.sent{border-left:3px solid var(--line);padding:4px 0 4px 12px}
+.sent+.sent{margin-top:14px}
+.sent .tr{color:var(--ok);margin-top:4px}
+.sent .st{font-size:13px;color:var(--muted);margin-top:4px;background:var(--bg);border-radius:8px;padding:6px 10px}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
+#toast div{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.25);animation:tin .25s;max-width:88vw;text-align:center}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}}
+#modal{position:fixed;inset:0;z-index:50;background:rgba(15,15,20,.45);display:flex;align-items:flex-end;justify-content:center;padding:12px}
+#modal[hidden]{display:none}
+#modal .card{width:100%;max-width:560px;max-height:88vh;overflow:auto}
+@media (min-width:760px){#modal{align-items:center}}
+.xpfly{position:fixed;z-index:70;font-weight:800;color:var(--acc);pointer-events:none;animation:fly 0.9s ease-out forwards;font-size:18px}
+@keyframes fly{to{transform:translateY(-50px);opacity:0}}
+.conf{position:fixed;top:-10px;width:9px;height:14px;z-index:80;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+.loader{padding:60px 0;text-align:center;color:var(--muted)}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+details summary{cursor:pointer;font-weight:700}
+.kbdhint{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+@media (max-width:759px){.kbdhint{display:none}.hud .hide-m{display:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="brand">YDS <b>Defterim</b></div>
+  <div class="hud">
+    <span class="pill" title="Seviye"><span id="hLvl">Lv 1</span><span class="lvbar"><i id="hBar" style="width:0"></i></span></span>
+    <span class="pill" id="hStreak" title="Seri: arka arkaya çalışılan gün">🔥 0</span>
+    <span class="pill" id="hToday" title="Bugünkü XP / günlük hedef">⭐ 0/100</span>
+    <span class="sync hide-m" id="sync"></span>
+  </div>
+</div></header>
+<nav class="tabs">
+  <a href="#ana" data-v="ana"><span>🏠</span>Ana</a>
+  <a href="#ekle" data-v="ekle"><span>➕</span>Ekle</a>
+  <a href="#defter" data-v="defter"><span>📒</span>Defter</a>
+  <a href="#calis" data-v="calis"><span>🎮</span>Çalış</a>
+  <a href="#metin" data-v="metin"><span>📄</span>Metin</a>
+</nav>
+<main id="main"><div class="loader"><span class="spin"></span> Defterin açılıyor…</div></main>
+<div id="toast"></div>
+<div id="modal" hidden></div>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dayKey = d => d.toLocaleDateString('sv');
+const today = () => dayKey(new Date());
+const newId = p => (p||'i') + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const norm = s => String(s||'').toLowerCase().replace(/[’`]/g,"'").replace(/[^\p{L}\p{N}' ]+/gu,' ').replace(/\s+/g,' ').trim();
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const DAY = 864e5;
+function lev(a,b){ const m=a.length,n=b.length; if(!m) return n; if(!n) return m; let p=Array.from({length:n+1},(_,i)=>i); for(let i=1;i<=m;i++){ const c=[i]; for(let j=1;j<=n;j++) c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1)); p=c; } return p[n]; }
+function toast(msg, ms=2600){ const d=document.createElement('div'); d.textContent=msg; $('#toast').appendChild(d); setTimeout(()=>d.remove(), ms); }
+function xpFly(n, el){ if(!n) return; const r=(el||document.body).getBoundingClientRect(); const s=document.createElement('div'); s.className='xpfly'; s.textContent='+'+n+' XP'; s.style.left=(r.left+r.width/2-30)+'px'; s.style.top=(el? r.top : window.innerHeight/2)+'px'; document.body.appendChild(s); setTimeout(()=>s.remove(),950); }
+function confetti(){ const cols=['#d9622b','#e7a627','#2d7a5f','#4a5bd1','#c2569b']; for(let i=0;i<70;i++){ const c=document.createElement('i'); c.className='conf'; c.style.left=Math.random()*100+'vw'; c.style.background=cols[i%cols.length]; c.style.animationDuration=(1.6+Math.random()*1.8)+'s'; c.style.animationDelay=(Math.random()*.5)+'s'; document.body.appendChild(c); setTimeout(()=>c.remove(),4200);} }
+function parseJSON(t){ if(!t) return null; t=String(t).replace(/```json|```/g,''); const a=Math.min(...['{','['].map(ch=>{const i=t.indexOf(ch);return i<0?1e9:i})); const b=Math.max(t.lastIndexOf('}'),t.lastIndexOf(']')); if(a>=1e9||b<a) return null; try{ return JSON.parse(t.slice(a,b+1)); }catch(e){ return null; } }
+
+/* ---------- state ---------- */
+const DEF_STATS = {xp:0, days:{}, goal:100, examDate:'', target:55, bestMatch:0, ts:0};
+const S = {
+  ready:false, mode:'', items:[], texts:[], stats:{...DEF_STATS},
+  view:'ana', ai:false,
+  df:{q:'', type:'hepsi', src:'', sort:'yeni', open:null},
+  pf:{scope:'gunluk', type:'hepsi', src:''},
+  dir:'en', lastSource:'', metinOpen:null
+};
+try { const p=JSON.parse(localStorage.getItem('ydsdefter_prefs')||'{}'); if(p.pf) S.pf={...S.pf,...p.pf}; if(p.dir) S.dir=p.dir; if(p.lastSource) S.lastSource=p.lastSource; } catch(e){}
+function savePrefs(){ try{ localStorage.setItem('ydsdefter_prefs', JSON.stringify({pf:S.pf, dir:S.dir, lastSource:S.lastSource})); }catch(e){} }
+let db=null, col=null, sample=null;
+
+function mkItem(o, keep){
+  const b = keep || {};
+  return {
+    id: o.id || b.id || newId('i'),
+    type: (o.type||b.type)==='kalip' ? 'kalip' : 'kelime',
+    en: String(o.en ?? b.en ?? '').trim(), tr: String(o.tr ?? b.tr ?? '').trim(),
+    example: String(o.example ?? b.example ?? '').trim(), exampleTr: String(o.exampleTr ?? b.exampleTr ?? '').trim(),
+    note: String(o.note ?? b.note ?? '').trim(), source: String(o.source ?? b.source ?? '').trim(),
+    tags: Array.isArray(o.tags) ? o.tags : String(o.tags ?? (b.tags||[]).join(',')).split(',').map(s=>s.trim()).filter(Boolean),
+    box: +(o.box ?? b.box ?? 0)||0, due: +(o.due ?? b.due ?? 0)||0, seen: +(o.seen ?? b.seen ?? 0)||0,
+    correct: +(o.correct ?? b.correct ?? 0)||0, wrong: +(o.wrong ?? b.wrong ?? 0)||0,
+    created: +(o.created ?? b.created ?? Date.now()), updated: Date.now()
+  };
+}
+
+/* ---------- storage ---------- */
+const LS_KEY='ydsdefter_v1';
+function lsLoad(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'null'); }catch(e){ return null; } }
+let lsT=null;
+function lsSaveSoon(){ clearTimeout(lsT); lsT=setTimeout(()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify({items:S.items, texts:S.texts, stats:S.stats})); setSync('ok'); }catch(e){ toast('Tarayıcı hafızası dolu ya da kapalı: yedek almayı unutma.'); } }, 250); }
+
+const wq = new Map(); let wRunning=false;
+function persist(id, data){
+  if(S.mode!=='cloud'){ lsSaveSoon(); return; }
+  wq.delete(id); wq.set(id, data); setSync('saving');
+  if(!wRunning) runQ();
+}
+async function doWrite(id, data){ const ref=col.doc(id); if(data===null) await ref.delete(); else await ref.set(data); }
+async function runQ(){
+  wRunning=true; let err=false;
+  while(wq.size){
+    const [id,data]=wq.entries().next().value; wq.delete(id);
+    try{ await doWrite(id,data); }
+    catch(e){
+      if(e && (e.code==='unavailable'||e.code==='resource_exhausted')){ await sleep(800+Math.random()*900); try{ await doWrite(id,data); }catch(e2){ err=true; writeFail(e2); } }
+      else { err=true; writeFail(e); }
+    }
+  }
+  wRunning=false; setSync(err?'err':'ok');
+}
+function writeFail(e){ const c=e&&e.code; if(c==='quota_exceeded') toast('Depolama sınırı doldu: bazı eski metinleri silmen gerekebilir.',5000); else toast('Kaydedilemedi ('+(c||'hata')+'). Bağlantını kontrol et.',4000); }
+function setSync(st){ const el=$('#sync'); if(!el) return; el.textContent = S.mode==='local' ? '💾 Bu tarayıcıda' : st==='saving' ? '⏳ Kaydediliyor' : st==='err' ? '⚠️ Kaydedilemedi' : '☁️ Kayıtlı'; el.title = S.mode==='local' ? 'Bulut kaydı kullanılamıyor; veriler yalnızca bu tarayıcıda. Defter > Yedek bölümünden yedek al.' : 'Defterin hesabına kayıtlı, her cihazdan açabilirsin.'; }
+
+function saveItem(it){ const i=S.items.findIndex(x=>x.id===it.id); if(i<0) S.items.unshift(it); else S.items[i]=it; persist(it.id, {...it, kind:'item'}); }
+function deleteItem(id){ S.items=S.items.filter(x=>x.id!==id); persist(id, null); }
+function saveText(t){ const i=S.texts.findIndex(x=>x.id===t.id); if(i<0) S.texts.unshift(t); else S.texts[i]=t; persist(t.id, {...t, kind:'text'}); }
+function deleteText(id){ S.texts=S.texts.filter(x=>x.id!==id); persist(id, null); }
+let stT=null;
+function saveStats(){ S.stats.ts=Date.now(); clearTimeout(stT); if(S.mode!=='cloud'){ lsSaveSoon(); return; } stT=setTimeout(()=>persist('_stats', {...S.stats, kind:'stats'}), 1200); }
+
+/* ---------- connect ---------- */
+async function connect(){
+  let C = window.claude;
+  for(let i=0;i<20 && !(C&&C.use);i++){ await sleep(100); C=window.claude; }
+  if(!C || !C.use){ goLocal(); return; }
+  C.use('sample').then(s=>{ sample=s; S.ai=!!s; document.body.classList.toggle('has-ai', !!s); }).catch(()=>{});
+  let u=null, d=null;
+  try{ [u,d] = await Promise.all([C.use('user'), C.use('db')]); }catch(e){}
+  let id=null; if(u&&d){ try{ id=await u.id(); }catch(e){} }
+  if(!d || !id){ goLocal(); return; }
+  db=d; col=db.collection('data/users/'+id); S.mode='cloud'; setSync('ok');
+  const loadT=setTimeout(()=>{ if(!S.ready){ toast('Kayıtlı verine henüz ulaşılamadı, bağlantını kontrol et.',5000); setSync('err'); } }, 10000);
+  let first=true;
+  col.onSnapshot(snap=>{
+    const items=[], texts=[]; let stats=null;
+    snap.docs.forEach(doc=>{ const v=doc.data(); if(!v) return;
+      if(wq.has(doc.id)) return;
+      if(v.kind==='item') items.push(mkItem({...v, id:doc.id}, null));
+      else if(v.kind==='text') texts.push({...v, id:doc.id});
+      else if(doc.id==='_stats') stats=v; });
+    // keep local versions of still-queued writes
+    for(const [k,v] of wq){ if(v===null) continue; if(v.kind==='item') items.push(mkItem(v)); else if(v.kind==='text') texts.push({...v}); }
+    S.items = items.sort((a,b)=>b.created-a.created);
+    S.texts = texts.sort((a,b)=>(b.created||0)-(a.created||0));
+    if(stats && (+stats.ts||0) >= (S.stats.ts||0)) S.stats = {...DEF_STATS, ...stats, days:{...(stats.days||{})}};
+    if(!snap.metadata.fromCache){ clearTimeout(loadT); if(first){ first=false; migrateLocal(snap.empty); } }
+    S.ready=true; onData();
+  }, err=>{ clearTimeout(loadT); setSync('err'); toast('Bağlantı kesildi; değişiklikler kaydedilmeyebilir. Sayfayı yenile.',6000); if(!S.ready) goLocal(); });
+}
+function goLocal(){
+  S.mode='local'; const l=lsLoad();
+  if(l){ S.items=(l.items||[]).map(x=>mkItem(x)); S.texts=l.texts||[]; S.stats={...DEF_STATS,...(l.stats||{})}; }
+  S.ready=true; setSync('ok'); onData();
+}
+async function migrateLocal(isEmpty){
+  let done=false; try{ done=localStorage.getItem('ydsdefter_migrated')==='1'; }catch(e){}
+  const l=lsLoad(); if(done || !isEmpty || !l || !(l.items||[]).length) return;
+  (l.items||[]).forEach(x=>{ const it=mkItem(x); S.items.push(it); persist(it.id,{...it,kind:'item'}); });
+  (l.texts||[]).forEach(t=>saveText(t));
+  if(l.stats){ S.stats={...DEF_STATS,...l.stats}; saveStats(); }
+  try{ localStorage.setItem('ydsdefter_migrated','1'); }catch(e){}
+  toast('Bu tarayıcıdaki eski kayıtların hesabına taşındı ✓'); onData();
+}
+
+/* ---------- XP / levels / SRS ---------- */
+const TITLES=['Çaylak','Kelime Avcısı','Kalıp Toplayıcı','Cümle Çözücü','Paragraf Kaşifi','Metin Dedektifi','Bağlaç Ustası','YDS Savaşçısı','55+ Adayı','Akademik Okur','Çeviri Ustası','YDS Efsanesi'];
+function levelInfo(xp){ let lv=1, need=150, rest=xp; while(rest>=need){ rest-=need; lv++; need+=50; } return {lv, rest, need, title:TITLES[Math.min(lv-1,TITLES.length-1)]}; }
+function streak(){ const d=S.stats.days||{}; let n=0; const c=new Date(); if(!(d[dayKey(c)]>0)) c.setDate(c.getDate()-1); while(d[dayKey(c)]>0){ n++; c.setDate(c.getDate()-1); } return n; }
+function addXp(n, el){
+  if(!n) return; const k=today(); const before=S.stats.days[k]||0; const lvB=levelInfo(S.stats.xp).lv;
+  S.stats.xp+=n; S.stats.days[k]=before+n; saveStats(); xpFly(n, el);
+  if(before<S.stats.goal && before+n>=S.stats.goal){ confetti(); toast('🎉 Günlük hedef tamam! Seri devam ediyor 🔥',3500); }
+  const L=levelInfo(S.stats.xp); if(L.lv>lvB){ confetti(); toast('⬆️ Seviye '+L.lv+': '+L.title+'!',3500); }
+  hud();
+}
+const INT=[0,1,3,7,14,30,60]; // gün
+const BOXL=['Yeni','1 gün','3 gün','1 hafta','2 hafta','1 ay','Öğrenildi'];
+const BOXC=['#b9b2a6','#c23b36','#e07a2f','#e7a627','#8bb04a','#2d7a5f','#4a5bd1'];
+function grade(it, q){ // q: again|hard|good
+  const now=Date.now(); it.seen++; it.last=now;
+  if(q==='again'){ it.box=1; it.due=now+10*60e3; it.wrong++; }
+  else if(q==='hard'){ it.box=Math.max(1,it.box); it.due=now+Math.max(.5,INT[it.box]/2)*DAY; it.correct++; }
+  else { it.box=Math.min(6,Math.max(1,it.box+1)); it.due=now+INT[it.box]*DAY; it.correct++; }
+  it.updated=now; saveItem(it);
+}
+const isDue = it => it.seen>0 && it.due<=Date.now();
+
+/* ---------- HUD + routing ---------- */
+function hud(){
+  const L=levelInfo(S.stats.xp); $('#hLvl').textContent='Lv '+L.lv; $('#hBar').style.width=Math.round(L.rest/L.need*100)+'%';
+  $('#hLvl').parentElement.title=L.title+' — sonraki seviyeye '+(L.need-L.rest)+' XP';
+  $('#hStreak').textContent='🔥 '+streak();
+  $('#hToday').textContent='⭐ '+(S.stats.days[today()]||0)+'/'+S.stats.goal;
+}
+const VIEWS={ana:vAna, ekle:vEkle, defter:vDefter, calis:vCalis, metin:vMetin};
+function route(){
+  let v=(location.hash||'').slice(1); if(!VIEWS[v]) v='ana';
+  if(S.view==='calis' && v!=='calis') endGame();
+  S.view=v; document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===v));
+  render(); window.scrollTo(0,0);
+}
+function render(){ if(!S.ready){ $('#main').innerHTML='<div class="loader"><span class="spin"></span> Defterin açılıyor…</div>'; return; } VIEWS[S.view](); }
+function onData(){
+  hud();
+  if(!S.ready) return;
+  const m=$('#main');
+  if(S.view==='calis' && G) return;
+  if(S.view==='ekle'){ if(!m.querySelector('#fAdd')) render(); else refreshEkleSide(); return; }
+  if(S.view==='defter'){ if(!m.querySelector('#defList')) render(); else renderDefList(); return; }
+  if(S.view==='metin' && S.metinOpen==='new' && m.querySelector('#tBody')) return;
+  render();
+}
+window.addEventListener('hashchange', route);
+function go(v){ if(location.hash==='#'+v) route(); else location.hash=v; }
+
+/* ---------- ANA ---------- */
+function vAna(){
+  const st=S.stats, its=S.items, now=Date.now();
+  const due=its.filter(isDue).length, nw=its.filter(i=>!i.seen).length;
+  const todayXp=st.days[today()]||0, pct=Math.min(100,Math.round(todayXp/st.goal*100));
+  const L=levelInfo(st.xp);
+  const kel=its.filter(i=>i.type==='kelime').length, kal=its.length-kel, learned=its.filter(i=>i.box>=5).length;
+  const boxes=[0,0,0,0,0,0,0]; its.forEach(i=>boxes[Math.min(6,i.box)]++);
+  const dn=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+  const wk=[]; for(let k=6;k>=0;k--){ const d=new Date(now-k*DAY); const key=dayKey(d); wk.push({l:k===0?'Bugün':dn[d.getDay()], v:st.days[key]||0}); }
+  const mx=Math.max(st.goal, ...wk.map(w=>w.v));
+  let exam=''; if(st.examDate){ const left=Math.ceil((new Date(st.examDate+'T09:00')-now)/DAY); exam = left>=0 ? `<div class="pill" style="background:rgba(255,255,255,.15);border:0;color:#fff">📅 Sınava ${left} gün</div>` : ''; }
+  const queue=Math.min(due+Math.min(nw,10),999);
+  let h=`<div class="stack">
+  <div class="card hero"><div class="row" style="gap:18px;align-items:center">
+    <div class="ring" style="--p:${pct}"><div>${todayXp}<br><span style="font-size:11px;font-weight:600">/ ${st.goal} XP</span></div></div>
+    <div class="sp" style="min-width:200px">
+      <div class="row" style="gap:6px;margin-bottom:6px">${exam}<div class="pill" style="background:rgba(255,255,255,.15);border:0;color:#fff">🎯 Hedef ${esc(st.target)}+</div></div>
+      <h1 style="color:#fff">${todayXp>=st.goal?'Bugünkü hedef tamam! 🎉':its.length?'Bugün '+queue+' kart seni bekliyor':'Hoş geldin! Defterin hazır.'}</h1>
+      <div class="muted">${its.length? `${due} tekrar zamanı gelen · ${nw} hiç çalışılmamış` : 'Hocanın verdiği kelime ve kalıpları ekleyerek başla.'}</div>
+      <div class="row" style="margin-top:12px">${its.length? `<button class="btn lg" data-act="startDaily">▶ Günün tekrarını başlat</button>` : `<a class="btn lg" href="#ekle">➕ İlk kelimeni ekle</a>`}</div>
+    </div></div></div>`;
+  if(!its.length){
+    h+=`<div class="card"><h3>Hızlı başlangıç</h3><p class="muted" style="margin-top:0">YDS metinlerinde en çok karşına çıkacak <b>45 bağlaç ve kalıp</b> (however, despite, due to, provided that, let alone…) hazır. İstersen tek tıkla defterine ekleyeyim, hocanın verdiklerini üstüne eklersin.</p><button class="btn pri" data-act="starter">📦 YDS bağlaç paketini ekle</button></div>`;
+  }
+  h+=`<div class="grid g3">
+    <div class="card stat"><div class="muted small">Toplam</div><div class="big">${its.length}</div><div class="small muted"><span class="chip kelime">${kel} kelime</span> <span class="chip kalip">${kal} kalıp</span></div></div>
+    <div class="card stat"><div class="muted small">Öğrenilen (1 ay+)</div><div class="big">${learned}</div><div class="small muted">${its.length?Math.round(learned/its.length*100):0}% kalıcı hafızada</div></div>
+    <div class="card stat"><div class="muted small">Seviye ${L.lv}</div><div class="big" style="font-size:22px;margin:4px 0 6px">${esc(L.title)}</div><div class="lvbar" style="width:100%"><i style="width:${Math.round(L.rest/L.need*100)}%"></i></div><div class="small muted" style="margin-top:4px">${st.xp} XP · sonraki seviye ${L.need-L.rest} XP</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><div class="row"><h3 class="sp">Son 7 gün</h3><span class="small muted">🔥 ${streak()} gün seri</span></div>
+      <div class="week">${wk.map(w=>`<div class="${w.v>=st.goal?'goalhit':''}"><span>${w.v||''}</span><i style="height:${Math.max(3,w.v/mx*80)}px"></i>${w.l}</div>`).join('')}</div></div>
+    <div class="card"><h3>Hafıza kutuları</h3><p class="small muted" style="margin:0 0 10px">Her doğru cevapta kart bir sonraki kutuya geçer ve daha seyrek sorulur. Yanlışta başa döner.</p>
+      <div class="boxes">${its.length?boxes.map((n,i)=>n?`<i style="width:${n/its.length*100}%;background:${BOXC[i]}" title="${BOXL[i]}: ${n}"></i>`:'').join(''):''}</div>
+      <div class="legend">${BOXL.map((l,i)=>`<span><b style="background:${BOXC[i]}"></b>${l}: ${boxes[i]}</span>`).join('')}</div></div>
+  </div>`;
+  const recent=its.slice(0,5);
+  if(recent.length) h+=`<div class="card"><div class="row"><h3 class="sp">Son eklediklerin</h3><a href="#defter" class="small">Tümü →</a></div>${recent.map(i=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><span class="chip ${i.type}">${i.type==='kalip'?'kalıp':'kelime'}</span><b>${esc(i.en)}</b><span class="muted sp">${esc(i.tr)}</span></div>`).join('')}</div>`;
+  h+=`<div class="row"><button class="btn ghost sm" data-act="settings">⚙️ Ayarlar (günlük hedef, sınav tarihi)</button>${its.length?'<button class="btn ghost sm" data-act="starter">📦 Bağlaç paketi</button>':''}</div></div>`;
+  $('#main').innerHTML=h;
+}
+
+/* ---------- EKLE ---------- */
+function sources(){ return [...new Set(S.items.map(i=>i.source).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr')); }
+let addType='kelime';
+function vEkle(){
+  $('#main').innerHTML=`<div class="grid" style="grid-template-columns:minmax(0,1fr)">
+  <form class="card stack" id="fAdd" autocomplete="off">
+    <div class="row"><h2 class="sp" style="margin:0">Yeni ekle</h2>
+      <div class="seg" id="typeSeg"><button type="button" data-t="kelime" class="${addType==='kelime'?'on':''}">Kelime</button><button type="button" data-t="kalip" class="${addType==='kalip'?'on':''}">Kalıp</button></div></div>
+    <div><label class="f" for="aEn">İngilizce *</label><input class="in" id="aEn" required placeholder="ör. due to  /  give rise to" style="font-size:18px;font-weight:700"><div id="dupWarn" class="small" style="color:var(--bad);margin-top:4px"></div></div>
+    <div><div class="row" style="margin-bottom:4px"><label class="f sp" for="aTr" style="margin:0">Türkçe anlamı *</label><button type="button" class="btn sm ai ai-only" data-act="aiFill">✨ Claude doldursun</button></div>
+      <input class="in" id="aTr" required placeholder="ör. nedeniyle, -den dolayı"></div>
+    <div><label class="f" for="aEx">Örnek cümle (videodaki / metindeki cümle)</label><input class="in" id="aEx" placeholder="The delay was due to bad weather."></div>
+    <div><label class="f" for="aExTr">Örnek cümlenin çevirisi</label><input class="in" id="aExTr" placeholder="Gecikme kötü hava nedeniyleydi."></div>
+    <div><label class="f" for="aNote">Not / kullanım</label><input class="in" id="aNote" placeholder="ör. due to + isim / V-ing · eş anl.: owing to"></div>
+    <div class="grid g2" style="gap:10px">
+      <div><label class="f" for="aSrc">Kaynak</label><input class="in" id="aSrc" list="srcList" placeholder="ör. Hoca – Video 3 / Reading at Work U2" value="${esc(S.lastSource)}"><datalist id="srcList">${sources().map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
+      <div><label class="f" for="aTags">Etiketler (virgülle)</label><input class="in" id="aTags" placeholder="bağlaç, zıtlık"></div>
+    </div>
+    <div class="row"><button class="btn pri lg" type="submit">Kaydet</button><span class="small muted">Kaynak alanı hatırlanır — video izlerken art arda hızlıca ekleyebilirsin. Enter = kaydet.</span></div>
+  </form>
+  <div class="card stack">
+    <details id="bulkBox"><summary>⚡ Toplu ekle (listeyi yapıştır)</summary>
+      <p class="small muted">Her satıra bir tane: <code>ingilizce = türkçe</code> (ayraç olarak = , - , : ya da Tab olur). Birden çok kelimeli satırlar otomatik “kalıp” sayılır.<span class="ai-txt"> Anlamı boş bırakırsan Claude doldurur.</span></p>
+      <textarea class="in" id="bulkTxt" rows="7" placeholder="nevertheless = yine de&#10;in terms of = açısından&#10;abundant = bol, çok miktarda&#10;give rise to"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn pri" type="button" data-act="bulkAdd">Listeyi ekle</button><span id="bulkMsg" class="small muted"></span></div>
+    </details>
+  </div>
+  <div class="card" id="todayAdded"></div>
+  </div>`;
+  $('#typeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; addType=b.dataset.t; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x===b)); };
+  $('#aEn').addEventListener('input', ()=>{ dupCheck(); const v=$('#aEn').value.trim(); if(/\s/.test(v) && addType==='kelime' && !$('#aEn').dataset.manual){ addType='kalip'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t==='kalip')); } });
+  $('#typeSeg').addEventListener('click', ()=>{ $('#aEn').dataset.manual='1'; });
+  $('#fAdd').onsubmit=e=>{ e.preventDefault(); addFromForm(); };
+  refreshEkleSide(); setTimeout(()=>$('#aEn')&&$('#aEn').focus(),50);
+}
+function findDup(en, exceptId){ const n=norm(en); return n ? S.items.find(i=>norm(i.en)===n && i.id!==exceptId) : null; }
+function dupCheck(){ const d=findDup($('#aEn').value); $('#dupWarn').innerHTML = d ? `Bu zaten defterinde: <b>${esc(d.en)}</b> — ${esc(d.tr)} <button type="button" class="btn sm" data-act="editItem" data-id="${d.id}">Düzenle</button>` : ''; }
+function refreshEkleSide(){
+  const el=$('#todayAdded'); if(!el) return;
+  const t0=new Date(); t0.setHours(0,0,0,0);
+  const list=S.items.filter(i=>i.created>=t0.getTime());
+  el.innerHTML = `<h3>Bugün eklediklerin (${list.length})</h3>` + (list.length? list.slice(0,30).map(i=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><span class="chip ${i.type}">${i.type==='kalip'?'kalıp':'kelime'}</span><b>${esc(i.en)}</b><span class="muted sp">${esc(i.tr)}</span><button class="btn sm ghost" data-act="editItem" data-id="${i.id}">✎</button></div>`).join('') : '<p class="muted small" style="margin:0">Henüz yok. Hadi ilkini ekle!</p>');
+  const dl=$('#srcList'); if(dl) dl.innerHTML=sources().map(s=>`<option value="${esc(s)}">`).join('');
+}
+function addFromForm(){
+  const en=$('#aEn').value.trim(), tr=$('#aTr').value.trim();
+  if(!en||!tr){ toast('İngilizce ve Türkçe anlam gerekli.'); return; }
+  if(findDup(en)){ toast('Bu ifade zaten defterinde — düzenleyebilirsin.'); return; }
+  const it=mkItem({type:addType, en, tr, example:$('#aEx').value, exampleTr:$('#aExTr').value, note:$('#aNote').value, source:$('#aSrc').value, tags:$('#aTags').value});
+  saveItem(it); S.lastSource=it.source; savePrefs(); addXp(2, $('#fAdd button[type=submit]'));
+  ['aEn','aTr','aEx','aExTr','aNote'].forEach(k=>$('#'+k).value=''); delete $('#aEn').dataset.manual; $('#dupWarn').innerHTML='';
+  addType='kelime'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t==='kelime'));
+  toast('Eklendi ✓ '+it.en); refreshEkleSide(); $('#aEn').focus();
+}
+async function aiFill(btn){
+  const en=$('#aEn').value.trim(); if(!en){ toast('Önce İngilizce ifadeyi yaz.'); $('#aEn').focus(); return; }
+  const ctx=$('#aEx').value.trim();
+  const prompt=`Sen Türkiye'deki YDS (Yabancı Dil Bilgisi Seviye Tespit Sınavı) için İngilizce öğreten bir hocasın. Aşağıdaki İngilizce ifade için SADECE geçerli JSON döndür; başka metin yazma.
+İfade: "${en}"
+${ctx?`Geçtiği cümle (anlamı bu bağlama göre ver): "${ctx}"`:''}
+Şema:
+{"type":"kelime" ya da "kalip" (bağlaç öbeği, phrasal verb, edat öbeği, birden çok kelimeli kalıp ise "kalip"),
+"tr":"Türkçe anlam(lar): en yaygın YDS anlamı önce, virgülle ayrılmış, kısa",
+"example":"YDS okuma parçalarına benzer akademik bir İngilizce örnek cümle; ifadeyi aynen içersin",
+"exampleTr":"örnek cümlenin doğal Türkçe çevirisi",
+"note":"çok kısa kullanım notu: kelime türü, nasıl kullanılır (ör. 'due to + isim/V-ing'), 1-2 eş anlamlı"}`;
+  const old=btn.innerHTML; btn.innerHTML='<span class="spin"></span> Düşünüyor…'; btn.disabled=true;
+  try{
+    const r=await sample(prompt,{modelTier:'quick'}); const o=parseJSON(r&&r.text);
+    if(!o||!o.tr) throw {message:'parse'};
+    if(!$('#aTr')) return;
+    if(!$('#aTr').value.trim()) $('#aTr').value=o.tr||'';
+    if(!ctx){ $('#aEx').value=o.example||''; $('#aExTr').value=o.exampleTr||''; } else if(!$('#aExTr').value.trim() && o.exampleTr && ctx===o.example) $('#aExTr').value=o.exampleTr;
+    if(!$('#aNote').value.trim()) $('#aNote').value=o.note||'';
+    if(o.type && !$('#aEn').dataset.manual){ addType=o.type==='kalip'?'kalip':'kelime'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t===addType)); }
+  }catch(e){ aiErr(e); }
+  finally{ btn.innerHTML=old; btn.disabled=false; }
+}
+function aiErr(e){ const c=e&&e.code; if(c==='not_granted'){ document.body.classList.remove('has-ai'); toast('Claude yardımı bu görünümde kapalı.'); } else if(c==='rate_limited') toast('Biraz yavaşla 🙂 Bir dakika sonra tekrar dene.'); else toast('Claude cevabı alınamadı, tekrar dene.'); }
+async function bulkAdd(btn){
+  const lines=$('#bulkTxt').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!lines.length){ toast('Önce listeyi yapıştır.'); return; }
+  const src=($('#aSrc')&&$('#aSrc').value.trim())||S.lastSource||'';
+  const parsed=[]; let skipped=0;
+  for(const l of lines){ const m=l.split(/\s*(?:\t|=|:|\s[-–—]\s)\s*/); const en=(m[0]||'').trim(); const tr=m.slice(1).join(', ').trim(); if(!en) continue; if(findDup(en)||parsed.some(p=>norm(p.en)===norm(en))){ skipped++; continue; } parsed.push({en,tr}); }
+  const missing=parsed.filter(p=>!p.tr);
+  if(missing.length && sample){
+    btn.disabled=true; $('#bulkMsg').innerHTML='<span class="spin"></span> Claude '+missing.length+' anlamı dolduruyor…';
+    for(let i=0;i<missing.length;i+=25){
+      const chunk=missing.slice(i,i+25);
+      const prompt=`YDS'ye hazırlanan bir öğrenci için aşağıdaki İngilizce ifadelerin her birine bilgi ver. SADECE geçerli JSON dizi döndür, sırayı koru.
+İfadeler: ${JSON.stringify(chunk.map(c=>c.en))}
+Her öğe: {"en":"ifadenin kendisi","type":"kelime"|"kalip","tr":"kısa Türkçe anlam(lar), en yaygın YDS anlamı önce","example":"akademik İngilizce örnek cümle, ifadeyi aynen içersin","exampleTr":"örneğin Türkçe çevirisi","note":"çok kısa kullanım notu"}`;
+      try{ const r=await sample(prompt,{modelTier:'quick'}); const arr=parseJSON(r&&r.text); if(Array.isArray(arr)) chunk.forEach((c,k)=>{ const o=arr.find(a=>a&&norm(a.en)===norm(c.en))||arr[k]; if(o) Object.assign(c,{tr:o.tr||'',example:o.example||'',exampleTr:o.exampleTr||'',note:o.note||'',type:o.type}); }); }
+      catch(e){ aiErr(e); break; }
+    }
+    btn.disabled=false;
+  }
+  let n=0, noTr=0;
+  parsed.forEach(p=>{ if(!p.tr){ noTr++; return; } saveItem(mkItem({...p, type:p.type|| (/\s/.test(p.en)?'kalip':'kelime'), source:src})); n++; });
+  if(n) addXp(Math.min(n*2,60), btn);
+  $('#bulkMsg').textContent=`${n} eklendi`+(skipped?`, ${skipped} zaten vardı`:'')+(noTr?`, ${noTr} anlamsız satır atlandı`:'');
+  const keep=parsed.filter(p=>!p.tr).map(p=>p.en); $('#bulkTxt').value=keep.join('\n');
+  refreshEkleSide();
+}
+
+/* ---------- DEFTER ---------- */
+function vDefter(){
+  const f=S.df;
+  $('#main').innerHTML=`<div class="stack">
+  <div class="card stack">
+    <div class="row"><h2 class="sp" style="margin:0">Defterim</h2><button class="btn sm" data-act="backup">💾 Yedek / içe aktar</button></div>
+    <input class="in" id="dQ" placeholder="🔎 Ara: kelime, anlam, not, kaynak…" value="${esc(f.q)}">
+    <div class="row">
+      <select class="in" id="dType" style="width:auto"><option value="hepsi">Hepsi</option><option value="kelime">Kelimeler</option><option value="kalip">Kalıplar</option></select>
+      <select class="in" id="dSrc" style="width:auto;max-width:220px"><option value="">Tüm kaynaklar</option>${sources().map(s=>`<option ${s===f.src?'selected':''}>${esc(s)}</option>`).join('')}</select>
+      <select class="in" id="dSort" style="width:auto"><option value="yeni">En yeni</option><option value="eski">En eski</option><option value="az">A → Z</option><option value="zor">En çok zorlandıklarım</option><option value="kutu">Hafıza kutusu</option></select>
+    </div>
+  </div>
+  <div id="defList"></div></div>`;
+  $('#dType').value=f.type; $('#dSort').value=f.sort;
+  $('#dQ').oninput=e=>{ f.q=e.target.value; renderDefList(); };
+  $('#dType').onchange=e=>{ f.type=e.target.value; renderDefList(); };
+  $('#dSrc').onchange=e=>{ f.src=e.target.value; renderDefList(); };
+  $('#dSort').onchange=e=>{ f.sort=e.target.value; renderDefList(); };
+  renderDefList();
+}
+function renderDefList(){
+  const f=S.df, el=$('#defList'); if(!el) return;
+  const q=norm(f.q);
+  let L=S.items.filter(i=>(f.type==='hepsi'||i.type===f.type)&&(!f.src||i.source===f.src)&&(!q||norm([i.en,i.tr,i.note,i.source,i.example,(i.tags||[]).join(' ')].join(' ')).includes(q)));
+  const srt={yeni:(a,b)=>b.created-a.created, eski:(a,b)=>a.created-b.created, az:(a,b)=>a.en.localeCompare(b.en,'en'), zor:(a,b)=>(b.wrong-b.correct)-(a.wrong-a.correct)||b.wrong-a.wrong, kutu:(a,b)=>a.box-b.box};
+  L.sort(srt[f.sort]||srt.yeni);
+  if(!S.items.length){ el.innerHTML=`<div class="card empty"><div class="big">📒</div><h3>Defterin boş</h3><p class="muted">Hocanın videosunu açıp ilk kelimeleri ekleyerek başla.</p><div class="row" style="justify-content:center"><a class="btn pri" href="#ekle">➕ Ekle</a><button class="btn" data-act="starter">📦 Bağlaç paketi</button></div></div>`; return; }
+  el.innerHTML=`<div class="small muted" style="margin:0 4px 8px">${L.length} sonuç</div>`+(L.length?L.slice(0,400).map(itemHTML).join(''):'<div class="card empty"><p class="muted">Bu filtreyle eşleşen bir şey yok.</p></div>');
+}
+function itemHTML(i){
+  const open=S.df.open===i.id;
+  const dots=[1,2,3,4,5,6].map(k=>`<i class="${i.box>=k?'on':''}"></i>`).join('');
+  return `<div class="item" data-act="toggleItem" data-id="${i.id}">
+    <div class="row"><span class="chip ${i.type}">${i.type==='kalip'?'kalıp':'kelime'}</span><span class="en">${esc(i.en)}</span><span class="sp"></span><span class="dots" title="Hafıza kutusu: ${BOXL[Math.min(6,i.box)]}">${dots}</span></div>
+    <div class="tr">${esc(i.tr)}</div>
+    ${open?`<div class="more stack" style="--x:0">
+      ${i.example?`<div><div class="ex">“${esc(i.example)}”</div>${i.exampleTr?`<div class="muted">${esc(i.exampleTr)}</div>`:''}</div>`:''}
+      ${i.note?`<div>📝 ${esc(i.note)}</div>`:''}
+      <div class="row small muted">${i.source?`<span class="chip src">${esc(i.source)}</span>`:''}${(i.tags||[]).map(t=>`<span class="chip src">#${esc(t)}</span>`).join('')}<span>✓ ${i.correct} · ✗ ${i.wrong}</span>${i.seen?`<span>· sıradaki tekrar: ${dueText(i)}</span>`:'<span>· henüz çalışılmadı</span>'}</div>
+      <div class="row"><button class="btn sm" data-act="editItem" data-id="${i.id}">✎ Düzenle</button><button class="btn sm" data-act="resetItem" data-id="${i.id}">↺ Sıfırla</button><button class="btn sm ghost" data-act="delItem" data-id="${i.id}" style="color:var(--bad)">🗑 Sil</button></div>
+    </div>`:''}
+  </div>`;
+}
+function dueText(i){ const d=i.due-Date.now(); if(d<=0) return 'şimdi'; if(d<DAY) return Math.max(1,Math.round(d/36e5))+' saat sonra'; return Math.round(d/DAY)+' gün sonra'; }
+
+/* ---------- modal ---------- */
+function modal(html){ const m=$('#modal'); m.innerHTML=`<div class="card stack">${html}</div>`; m.hidden=false; }
+function closeModal(){ const m=$('#modal'); m.hidden=true; m.innerHTML=''; }
+$('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+function ask(msg, yes='Evet', danger=true){ return new Promise(res=>{ modal(`<p style="margin:0;font-size:17px">${msg}</p><div class="row" style="justify-content:flex-end"><button class="btn" id="mNo">Vazgeç</button><button class="btn ${danger?'bad':'pri'}" id="mYes">${esc(yes)}</button></div>`); $('#mNo').onclick=()=>{closeModal();res(false)}; $('#mYes').onclick=()=>{closeModal();res(true)}; }); }
+function editModal(id){
+  const i=S.items.find(x=>x.id===id); if(!i) return;
+  modal(`<div class="row"><h2 class="sp" style="margin:0">Düzenle</h2><button class="btn sm ghost" data-close>✕</button></div>
+  <div class="seg" id="eType"><button type="button" data-t="kelime" class="${i.type==='kelime'?'on':''}">Kelime</button><button type="button" data-t="kalip" class="${i.type==='kalip'?'on':''}">Kalıp</button></div>
+  ${[['en','İngilizce'],['tr','Türkçe anlamı'],['example','Örnek cümle'],['exampleTr','Örnek çevirisi'],['note','Not'],['source','Kaynak']].map(([k,l])=>`<div><label class="f">${l}</label><input class="in" data-k="${k}" value="${esc(i[k])}"></div>`).join('')}
+  <div><label class="f">Etiketler</label><input class="in" data-k="tags" value="${esc((i.tags||[]).join(', '))}"></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn" data-close>Vazgeç</button><button class="btn pri" id="eSave">Kaydet</button></div>`);
+  let t=i.type; $('#eType').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; t=b.dataset.t; [...$('#eType').children].forEach(x=>x.classList.toggle('on',x===b)); };
+  $('#modal').querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
+  $('#eSave').onclick=()=>{ const o={type:t}; $('#modal').querySelectorAll('[data-k]').forEach(x=>o[x.dataset.k]=x.value); if(!o.en.trim()||!o.tr.trim()){ toast('İngilizce ve anlam boş olamaz.'); return; } const d=findDup(o.en, i.id); if(d){ toast('Bu ifade defterde zaten var.'); return; } saveItem(mkItem({...o, id:i.id}, i)); closeModal(); toast('Güncellendi ✓'); onData(); };
+}
+function settingsModal(){
+  const st=S.stats;
+  modal(`<div class="row"><h2 class="sp" style="margin:0">Ayarlar</h2><button class="btn sm ghost" data-close>✕</button></div>
+  <div><label class="f">Günlük XP hedefi</label><div class="seg" id="gSeg">${[50,100,150,250].map(g=>`<button type="button" data-g="${g}" class="${st.goal===g?'on':''}">${g}</button>`).join('')}</div><div class="small muted" style="margin-top:4px">Kabaca: 100 XP ≈ 15–20 dakika tekrar.</div></div>
+  <div><label class="f">Sınav tarihi</label><input class="in" type="date" id="sDate" value="${esc(st.examDate)}"></div>
+  <div><label class="f">Hedef puan</label><input class="in" type="number" id="sTarget" min="30" max="100" value="${esc(st.target)}"></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn pri" id="sSave">Kaydet</button></div>`);
+  let g=st.goal; $('#gSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; g=+b.dataset.g; [...$('#gSeg').children].forEach(x=>x.classList.toggle('on',x===b)); };
+  $('#modal').querySelector('[data-close]').onclick=closeModal;
+  $('#sSave').onclick=()=>{ st.goal=g; st.examDate=$('#sDate').value; st.target=Math.max(30,Math.min(100,+$('#sTarget').value||55)); saveStats(); closeModal(); hud(); render(); };
+}
+function backupModal(){
+  const data=JSON.stringify({app:'yds-defterim',v:1,exported:new Date().toISOString(),items:S.items.map(({id,...r})=>r)},null,1);
+  modal(`<div class="row"><h2 class="sp" style="margin:0">Yedek & içe aktar</h2><button class="btn sm ghost" data-close>✕</button></div>
+  <p class="small muted" style="margin:0">${S.mode==='cloud'?'Defterin hesabına otomatik kaydediliyor. Yine de ara sıra yedeği kopyalayıp bir notta saklamak iyi fikir.':'⚠️ Şu an veriler sadece bu tarayıcıda duruyor. Düzenli yedek al!'}</p>
+  <div><label class="f">Yedek (${S.items.length} öğe)</label><textarea class="in" id="bOut" rows="5" readonly>${esc(data)}</textarea><button class="btn sm" id="bCopy" style="margin-top:6px">📋 Kopyala</button></div>
+  <div><label class="f">İçe aktar (yedek metnini yapıştır ya da .json dosyası seç)</label><textarea class="in" id="bIn" rows="4" placeholder='{"items":[...]}'></textarea>
+  <div class="row" style="margin-top:6px"><input type="file" id="bFile" accept=".json,.txt,application/json" class="small"><span class="sp"></span><button class="btn pri sm" id="bImp">İçe aktar</button></div></div>`);
+  $('#modal').querySelector('[data-close]').onclick=closeModal;
+  $('#bCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(data); toast('Kopyalandı ✓'); }catch(e){ const t=$('#bOut'); t.select(); toast('Seçildi — Ctrl/Cmd+C ile kopyala.'); } };
+  $('#bFile').onchange=async e=>{ const f=e.target.files[0]; if(f) $('#bIn').value=await f.text(); };
+  $('#bImp').onclick=()=>{ const o=parseJSON($('#bIn').value); const arr=Array.isArray(o)?o:o&&o.items; if(!Array.isArray(arr)){ toast('Bu metin okunamadı.'); return; } let n=0,s=0; arr.forEach(x=>{ if(!x||!x.en||!x.tr){s++;return;} if(findDup(x.en)){s++;return;} const {id,...r}=x; saveItem(mkItem(r)); n++; }); closeModal(); toast(`${n} öğe eklendi${s?`, ${s} atlandı`:''}`); onData(); };
+}
+
+/* ---------- STARTER PACK ---------- */
+const STARTER=[
+['however','ancak, fakat, yine de','The method is effective; however, it is rather expensive.','Yöntem etkili; ancak oldukça pahalı.','Zıtlık. Cümleler arası; noktalı virgül/virgülle kullanılır.'],
+['nevertheless','yine de, buna rağmen','The evidence was weak; nevertheless, the theory gained support.','Kanıtlar zayıftı; yine de teori destek kazandı.','Zıtlık = nonetheless, even so.'],
+['moreover','üstelik, ayrıca','The policy is costly. Moreover, it has failed to reduce pollution.','Politika maliyetli. Üstelik kirliliği azaltmayı başaramadı.','Ekleme = furthermore, in addition.'],
+['furthermore','dahası, bunun yanı sıra','Furthermore, the study revealed a link between sleep and memory.','Dahası, çalışma uyku ile hafıza arasında bir bağ ortaya koydu.','Ekleme = moreover, besides.'],
+['therefore','bu nedenle, bu yüzden','The sample was small; therefore, the results cannot be generalised.','Örneklem küçüktü; bu nedenle sonuçlar genellenemez.','Sonuç = thus, hence, consequently.'],
+['consequently','sonuç olarak, bu nedenle','Rainfall decreased sharply; consequently, crop yields fell.','Yağış keskin biçimde azaldı; sonuç olarak ürün verimi düştü.','Sonuç bağlacı.'],
+['thus','böylece, bu yüzden','Thus, the hypothesis was confirmed.','Böylece hipotez doğrulandı.','Sonuç = therefore. Thus + V-ing: "böylece …arak".'],
+['hence','bu yüzden, dolayısıyla','The material is light and strong, hence its popularity.','Malzeme hafif ve dayanıklı, dolayısıyla popüler.','Sonuç; ardından isim de gelebilir.'],
+['whereas','oysa, -iken (zıtlık)','Some species migrate, whereas others remain in one place.','Bazı türler göç eder, oysa diğerleri tek yerde kalır.','Zıtlık + tam cümle = while.'],
+['although','-e rağmen, -dığı halde','Although the task was difficult, they completed it on time.','Görev zor olmasına rağmen zamanında bitirdiler.','+ tam cümle (özne+yüklem) = even though, though.'],
+['despite','-e rağmen','Despite the high cost, the project was approved.','Yüksek maliyete rağmen proje onaylandı.','+ isim / V-ing (cümle almaz!) = in spite of.'],
+['in spite of','-e rağmen','In spite of numerous warnings, the city was unprepared.','Pek çok uyarıya rağmen şehir hazırlıksızdı.','+ isim / V-ing = despite.'],
+['due to','nedeniyle, -den dolayı','The flight was cancelled due to heavy fog.','Uçuş yoğun sis nedeniyle iptal edildi.','+ isim / V-ing = owing to, because of.'],
+['owing to','yüzünden, nedeniyle','Owing to a lack of funding, the research was halted.','Fon eksikliği yüzünden araştırma durduruldu.','+ isim = due to, on account of.'],
+['on account of','nedeniyle, yüzünden','The match was postponed on account of the storm.','Maç fırtına nedeniyle ertelendi.','+ isim.'],
+['provided that','şartıyla, -mesi koşuluyla','You may borrow the book provided that you return it by Friday.','Cuma\'ya kadar iade etmen şartıyla kitabı ödünç alabilirsin.','Koşul + tam cümle = providing, as long as, on condition that.'],
+['as long as','sürece, şartıyla','Plants can survive as long as they receive enough light.','Bitkiler yeterli ışık aldıkları sürece hayatta kalabilir.','Koşul / süre.'],
+['unless','-medikçe, -mezse','Unless action is taken, many species will disappear.','Önlem alınmadıkça pek çok tür yok olacak.','= if … not. Kendisi olumsuzluk taşır.'],
+['in terms of','açısından, bakımından','In terms of efficiency, the new engine is far superior.','Verimlilik açısından yeni motor çok daha üstün.','+ isim.'],
+['with regard to','ile ilgili olarak, hakkında','With regard to climate, the region is mild.','İklim açısından bölge ılımandır.','= regarding, concerning, as regards.'],
+['regardless of','-e bakılmaksızın, -den bağımsız olarak','The law applies to everyone regardless of age.','Yasa yaşa bakılmaksızın herkese uygulanır.','+ isim / wh- cümlesi = irrespective of.'],
+['in order to','-mek için, -mek amacıyla','Bees communicate in order to locate food.','Arılar yiyecek bulmak için iletişim kurar.','Amaç + fiil yalın hali = so as to.'],
+['so as to','-mek amacıyla','The data were encrypted so as to protect privacy.','Veriler gizliliği korumak amacıyla şifrelendi.','Amaç. Olumsuzu: so as not to.'],
+['let alone','şöyle dursun, bırakın … -ı','Few people can read the text, let alone translate it.','Bırakın çevirmeyi, metni okuyabilen çok az kişi var.','Olumsuz cümleden sonra gelir.'],
+['not only ... but also','sadece … değil, aynı zamanda …','The drug is not only effective but also safe.','İlaç sadece etkili değil, aynı zamanda güvenli.','Cümle başında devrik yapı: Not only does …'],
+['as well as','yanı sıra, hem de','The program offers lectures as well as workshops.','Program atölyelerin yanı sıra dersler de sunuyor.','= in addition to.'],
+['in addition to','-e ek olarak, -in yanı sıra','In addition to its beauty, the island is rich in history.','Güzelliğine ek olarak ada tarih açısından da zengin.','+ isim / V-ing.'],
+['instead of','yerine','Many people now work from home instead of commuting.','Pek çok kişi artık işe gidip gelmek yerine evden çalışıyor.','+ isim / V-ing.'],
+['rather than','-den ziyade, yerine','The focus is on prevention rather than treatment.','Odak tedaviden ziyade önlemedir.','Paralel yapı ister.'],
+['by means of','vasıtasıyla, aracılığıyla','Information is transmitted by means of electrical signals.','Bilgi elektrik sinyalleri aracılığıyla iletilir.','+ isim = through, via.'],
+['in contrast','aksine, buna karşın','In contrast, urban areas grew rapidly.','Buna karşın kentsel alanlar hızla büyüdü.','Zıtlık. "in contrast to + isim" de olur.'],
+['on the other hand','öte yandan, diğer taraftan','On the other hand, the risks cannot be ignored.','Öte yandan riskler göz ardı edilemez.','Zıtlık / karşılaştırma.'],
+['in particular','özellikle','Children, in particular, are vulnerable to the disease.','Özellikle çocuklar hastalığa karşı savunmasızdır.','= particularly, especially.'],
+['namely','yani, şöyle ki','Two factors, namely cost and time, were decisive.','İki faktör, yani maliyet ve zaman, belirleyiciydi.','Açıklama/örnekleme.'],
+['albeit','-se de, her ne kadar … olsa da','The economy grew, albeit slowly.','Ekonomi büyüdü, yavaş da olsa.','+ sıfat/zarf/isim; resmi dil = although.'],
+['in the absence of','yokluğunda, olmadığında','In the absence of oxygen, the cells die.','Oksijen yokluğunda hücreler ölür.','+ isim.'],
+['be attributed to','-e atfedilmek, -e bağlanmak','The decline can be attributed to overfishing.','Düşüş aşırı avlanmaya bağlanabilir.','Edilgen; neden göstermek.'],
+['give rise to','-e yol açmak, neden olmak','Poor sanitation can give rise to serious diseases.','Kötü sağlık koşulları ciddi hastalıklara yol açabilir.','= lead to, cause, bring about.'],
+['account for','açıklamak; (oran) oluşturmak','Women account for 40% of the workforce.','Kadınlar iş gücünün %40\'ını oluşturur.','İki anlamına dikkat!'],
+['result in','ile sonuçlanmak, -e yol açmak','The reforms resulted in higher unemployment.','Reformlar daha yüksek işsizlikle sonuçlandı.','Sebep → sonuç. Karıştırma: result from.'],
+['result from','-den kaynaklanmak','Many accidents result from fatigue.','Pek çok kaza yorgunluktan kaynaklanır.','Sonuç ← sebep.'],
+['as opposed to','-in aksine, -e karşın','Students prefer digital books as opposed to printed ones.','Öğrenciler basılı kitapların aksine dijital kitapları tercih ediyor.','+ isim.'],
+['in the wake of','-in ardından, -in hemen sonrasında','In the wake of the crisis, new regulations were introduced.','Krizin ardından yeni düzenlemeler getirildi.','Genelde olumsuz olay sonrası.'],
+['contrary to','-in aksine, -e ters olarak','Contrary to popular belief, bats are not blind.','Yaygın inanışın aksine yarasalar kör değildir.','+ isim.'],
+['to a great extent','büyük ölçüde','Success depends to a great extent on motivation.','Başarı büyük ölçüde motivasyona bağlıdır.','= largely, to a large degree.']
+];
+async function addStarter(){
+  const fresh=STARTER.filter(s=>!findDup(s[0]));
+  if(!fresh.length){ toast('Paketteki her şey zaten defterinde ✓'); return; }
+  if(!await ask(`YDS bağlaç & kalıp paketinden <b>${fresh.length}</b> öğe defterine eklensin mi?`,'Ekle',false)) return;
+  const t=Date.now(); fresh.forEach(([en,tr,ex,exTr,note],k)=>saveItem(mkItem({type:/\s/.test(en)?'kalip':'kelime', en, tr, example:ex, exampleTr:exTr, note, source:'YDS bağlaç paketi', tags:'bağlaç', created:t-k})));
+  toast(fresh.length+' öğe eklendi ✓'); onData();
+}
+
+/* ---------- ÇALIŞ ---------- */
+let G=null, gTimer=null;
+function getPool(){
+  const f=S.pf, now=Date.now(); let p=S.items.slice();
+  if(f.type!=='hepsi') p=p.filter(i=>i.type===f.type);
+  if(f.src) p=p.filter(i=>i.source===f.src);
+  if(f.scope==='gunluk'){ const due=p.filter(isDue).sort((a,b)=>a.due-b.due); const nw=p.filter(i=>!i.seen).sort((a,b)=>a.created-b.created).slice(0,10); p=due.concat(nw); }
+  else if(f.scope==='yeni') p=p.filter(i=>!i.seen);
+  else if(f.scope==='zor') p=p.filter(i=>i.seen && (i.wrong>=i.correct || i.box<=1));
+  else if(f.scope==='son') p=p.filter(i=>i.created>now-7*DAY);
+  return p;
+}
+function gapCore(en){ let c=String(en).split('/')[0].trim(); const m=c.search(/\b(sth|sb|smth|someone|something|somebody|one's|oneself)\b|\.{2,}|…/i); if(m>1) c=c.slice(0,m).trim(); c=c.replace(/^(be|to)\s+/i,'').trim(); return c; }
+function phraseRe(en){ const c=gapCore(en); if(c.length<2) return null; return c.split(/\s+/).map(w=>escRe(w)+"[\\w']*").join('\\s+'); }
+function findIn(sent, en){ const r=phraseRe(en); if(!r) return null; const m=new RegExp('\\b'+r,'i').exec(sent||''); return m? {i:m.index, len:m[0].length, txt:m[0]} : null; }
+function vCalis(){
+  if(G && !G.over){ drawGame(); return; }
+  endGame();
+  const p=getPool(), all=S.items.length, f=S.pf;
+  const gapN=p.filter(i=>i.example&&findIn(i.example,i.en)).length;
+  const games=[
+    {k:'kart',ic:'🃏',t:'Kartlar',d:'Klasik flash kart. Kendine dürüst ol: bildim / zorlandım / bilmedim.',ok:p.length>=1,need:'En az 1 kart'},
+    {k:'test',ic:'✅',t:'Test',d:'4 şıklı anlam sorusu. Art arda doğrularla kombo yap!',ok:p.length>=1&&all>=4,need:'Defterde en az 4 öğe'},
+    {k:'bosluk',ic:'🧩',t:'Boşluk doldur',d:'YDS kelime sorusu gibi: örnek cümledeki boşluğa doğru ifadeyi seç.',ok:gapN>=1&&all>=4,need:'Örnek cümlesi olan öğeler gerekli ('+gapN+' uygun)'},
+    {k:'esle',ic:'🔗',t:'Eşleştir',d:'İngilizceleri Türkçeleriyle eşleştir, rekorunu kır.',ok:p.length>=3,need:'En az 3 öğe'},
+    {k:'yaz',ic:'⌨️',t:'Yaz',d:'Türkçesini gör, İngilizcesini yaz. En kalıcı öğrenme yöntemi.',ok:p.length>=1,need:'En az 1 öğe'}
+  ];
+  $('#main').innerHTML=`<div class="stack">
+  <div class="card stack"><h2 style="margin:0">Çalış</h2>
+    <div class="row">
+      <select class="in" id="pScope" style="width:auto"><option value="gunluk">🗓 Günün tekrarı</option><option value="tumu">📚 Tüm defter</option><option value="yeni">🆕 Hiç çalışılmamış</option><option value="zor">😵 Zorlandıklarım</option><option value="son">🕐 Son 7 günde eklenen</option></select>
+      <select class="in" id="pType" style="width:auto"><option value="hepsi">Kelime + kalıp</option><option value="kelime">Sadece kelimeler</option><option value="kalip">Sadece kalıplar</option></select>
+      <select class="in" id="pSrc" style="width:auto;max-width:220px"><option value="">Tüm kaynaklar</option>${sources().map(s=>`<option ${s===f.src?'selected':''}>${esc(s)}</option>`).join('')}</select>
+      <div class="seg" id="pDir" title="Kartlarda/testte soru yönü"><button data-d="en" class="${S.dir==='en'?'on':''}">EN → TR</button><button data-d="tr" class="${S.dir==='tr'?'on':''}">TR → EN</button><button data-d="mix" class="${S.dir==='mix'?'on':''}">Karışık</button></div>
+    </div>
+    <div class="small muted">${p.length?`Bu seçimde <b>${p.length}</b> öğe var.`:(all? (f.scope==='gunluk'?'🎉 Bugün için tekrar zamanı gelen kart yok! “Tüm defter” ya da “Zorlandıklarım” ile devam edebilirsin.':'Bu seçimde öğe yok.') : 'Önce defterine birkaç kelime ekle.')}</div>
+  </div>
+  <div class="grid g3 games">${games.map(g=>`<div class="card"><div class="ic">${g.ic}</div><h3 style="margin:0">${g.t}</h3><div class="small muted sp">${g.d}</div><button class="btn ${g.ok?'pri':''}" data-act="startGame" data-k="${g.k}" ${g.ok?'':'disabled'}>${g.ok?'Başla':g.need}</button></div>`).join('')}</div>
+  ${S.stats.bestMatch?`<div class="small muted center">🏆 Eşleştirme rekorun: ${(S.stats.bestMatch/1000).toFixed(1)} sn / 5 çift</div>`:''}
+  </div>`;
+  $('#pScope').value=f.scope; $('#pType').value=f.type;
+  const ch=()=>{ f.scope=$('#pScope').value; f.type=$('#pType').value; f.src=$('#pSrc').value; savePrefs(); vCalis(); };
+  $('#pScope').onchange=ch; $('#pType').onchange=ch; $('#pSrc').onchange=ch;
+  $('#pDir').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; S.dir=b.dataset.d; savePrefs(); [...$('#pDir').children].forEach(x=>x.classList.toggle('on',x===b)); };
+}
+function endGame(){ G=null; clearInterval(gTimer); gTimer=null; }
+function qDir(){ return S.dir==='mix' ? (Math.random()<.5?'en':'tr') : S.dir; }
+function startGame(k, pool){
+  pool = pool || getPool(); endGame();
+  if(k==='kart') G={k, q:shuffle(pool).slice(0,25), i:0, flip:false, re:{}, res:{good:0,hard:0,again:0}, xp:0, dirs:{}};
+  if(k==='test'){ const q=shuffle(pool).slice(0,10).map(it=>mkQ(it, qDir())); G={k, q, i:0, ans:null, combo:0, best:0, ok:0, xp:0}; }
+  if(k==='bosluk'){ const el=pool.filter(i=>i.example&&findIn(i.example,i.en)); const q=shuffle(el).slice(0,10).map(it=>mkGapQ(it)); G={k,q,i:0,ans:null,combo:0,best:0,ok:0,xp:0}; }
+  if(k==='esle'){ const L=shuffle(pool).slice(0,15); const rounds=[]; for(let i=0;i<L.length;i+=5) rounds.push(L.slice(i,i+5)); if(rounds.length>1 && rounds[rounds.length-1].length<3){ const last=rounds.pop(); rounds[rounds.length-1].push(...last); } G={k, rounds, r:0, sel:null, done:new Set(), bad:new Set(), mist:0, t0:Date.now(), times:[], xp:0}; newRound(); gTimer=setInterval(()=>{ const t=$('#mTime'); if(t&&G) t.textContent=((Date.now()-G.t0)/1000).toFixed(1)+' sn'; },100); }
+  if(k==='yaz') G={k, q:shuffle(pool).slice(0,10), i:0, hint:0, ans:null, ok:0, xp:0};
+  G.pool=pool; G.startXp=S.stats.xp;
+  if(S.view!=='calis') go('calis'); else drawGame();
+}
+function distractors(it, field, n){
+  const same=shuffle(S.items.filter(x=>x.id!==it.id && x.type===it.type && norm(x[field])!==norm(it[field])));
+  const other=shuffle(S.items.filter(x=>x.id!==it.id && x.type!==it.type && norm(x[field])!==norm(it[field])));
+  const out=[]; for(const x of same.concat(other)){ if(out.length>=n) break; if(!out.some(o=>norm(o[field])===norm(x[field]))) out.push(x); } return out;
+}
+function mkQ(it, dir){ const field=dir==='en'?'tr':'en'; const opts=shuffle([it, ...distractors(it, field, 3)]); return {it, dir, field, opts, right:opts.indexOf(it)}; }
+function mkGapQ(it){ const opts=shuffle([it, ...distractors(it,'en',3)]); return {it, opts, right:opts.indexOf(it), m:findIn(it.example,it.en)}; }
+function newRound(){ const R=G.rounds[G.r]; G.left=shuffle(R); G.right=shuffle(R); G.sel=null; G.bad=new Set(); G.rt0=Date.now(); }
+function gameTop(cur, tot, extra=''){ return `<div class="game-top"><button class="btn sm ghost" data-act="quitGame">✕</button><div class="prog"><i style="width:${tot?cur/tot*100:0}%"></i></div><span class="small muted">${cur}/${tot}</span>${extra}</div>`; }
+function drawGame(){
+  const m=$('#main'); if(!G) return vCalis(); if(G.over) return;
+  if(G.k==='kart'){
+    if(G.i>=G.q.length) return finish(`<div class="grid g3"><div class="card center"><div class="big" style="color:var(--ok)">${G.res.good}</div>bildim</div><div class="card center"><div class="big" style="color:var(--gold)">${G.res.hard}</div>zorlandım</div><div class="card center"><div class="big" style="color:var(--bad)">${G.res.again}</div>bilmedim</div></div>`);
+    const it=G.q[G.i]; const d=G.dirs[it.id+'_'+G.i] || (G.dirs[it.id+'_'+G.i]=qDir());
+    const front=d==='en'?it.en:it.tr, back=d==='en'?it.tr:it.en;
+    m.innerHTML=`<div style="max-width:620px;margin:0 auto">${gameTop(G.i,G.q.length)}
+      <div class="card flash" data-act="flip"><div class="row" style="justify-content:center;margin-bottom:12px"><span class="chip ${it.type}">${it.type==='kalip'?'kalıp':'kelime'}</span>${it.source?`<span class="chip src">${esc(it.source)}</span>`:''}</div>
+        <div class="w">${esc(front)}</div>
+        ${G.flip?`<div class="m">${esc(back)}</div>${it.example?`<hr><div class="ex">“${esc(it.example)}”</div>${it.exampleTr?`<div class="muted small">${esc(it.exampleTr)}</div>`:''}`:''}${it.note?`<div class="small muted" style="margin-top:8px">📝 ${esc(it.note)}</div>`:''}`:`<div class="muted small" style="margin-top:18px">Önce aklından cevabı söyle, sonra kartı çevir 👆</div>`}
+      </div>
+      <div class="row" style="justify-content:center;margin-top:14px">${G.flip?`<button class="btn bad lg" data-act="rate" data-q="again">Bilmedim</button><button class="btn lg" data-act="rate" data-q="hard" style="border-color:var(--gold)">Zorlandım</button><button class="btn ok lg" data-act="rate" data-q="good">Bildim</button>`:`<button class="btn pri lg" data-act="flip">Çevir</button>`}</div>
+      <div class="kbdhint">Boşluk = çevir · 1 bilmedim · 2 zorlandım · 3 bildim</div></div>`;
+    return;
+  }
+  if(G.k==='test'||G.k==='bosluk'){
+    if(G.i>=G.q.length) return finish(`<div class="grid g3"><div class="card center"><div class="big" style="color:var(--ok)">${G.ok}/${G.q.length}</div>doğru</div><div class="card center"><div class="big" style="color:var(--acc)">x${G.best}</div>en uzun kombo</div></div>`);
+    const Q=G.q[G.i], it=Q.it, a=G.ans;
+    let prompt;
+    if(G.k==='test') prompt=`<div class="small muted">${Q.dir==='en'?'Bu ifadenin Türkçesi hangisi?':'Bunun İngilizcesi hangisi?'}</div><div class="w" style="font-family:'Bricolage Grotesque';font-size:30px;font-weight:800;margin-top:6px">${esc(Q.dir==='en'?it.en:it.tr)}</div>`;
+    else { const s=it.example, mm=Q.m; prompt=`<div class="small muted">Boşluğa en uygun ifadeyi seç.</div><div class="gap" style="margin-top:8px">${esc(s.slice(0,mm.i))}${a===null?'<span class="blank">&nbsp;</span>':`<span class="fill">${esc(mm.txt)}</span>`}${esc(s.slice(mm.i+mm.len))}</div>`; }
+    const field = G.k==='test'?Q.field:'en';
+    m.innerHTML=`<div style="max-width:640px;margin:0 auto">${gameTop(G.i,G.q.length,G.combo>1?`<span class="combo">🔥 x${G.combo}</span>`:'')}
+      <div class="card"><div class="row" style="margin-bottom:8px"><span class="chip ${it.type}">${it.type==='kalip'?'kalıp':'kelime'}</span></div>${prompt}
+      <div class="opts">${Q.opts.map((o,k)=>`<button class="opt ${a!==null?(k===Q.right?'right':(k===a?'wrong':'')):''}" data-act="answer" data-k="${k}"><kbd>${k+1}</kbd>${esc(o[field])}</button>`).join('')}</div>
+      ${a!==null?`<div class="fb ${a===Q.right?'ok':'no'}">${a===Q.right?'✓ Doğru!':'✗ Doğrusu: <b>'+esc(it[field])+'</b>'}<div style="margin-top:6px"><b>${esc(it.en)}</b> — ${esc(it.tr)}</div>${G.k==='test'&&it.example?`<div class="ex small" style="margin-top:4px">“${esc(it.example)}”</div>`:''}${G.k==='bosluk'&&it.exampleTr?`<div class="small muted" style="margin-top:4px">${esc(it.exampleTr)}</div>`:''}${it.note?`<div class="small muted">📝 ${esc(it.note)}</div>`:''}</div><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn pri" data-act="nextQ">Devam →</button></div>`:''}
+      </div><div class="kbdhint">1-4 ile seç · Enter = devam</div></div>`;
+    return;
+  }
+  if(G.k==='esle'){
+    const R=G.rounds[G.r];
+    m.innerHTML=`<div style="max-width:680px;margin:0 auto">${gameTop(G.r,G.rounds.length,`<span class="pill" id="mTime">0.0 sn</span>`)}
+      <div class="card"><div class="small muted" style="margin-bottom:10px">Soldan bir İngilizce, sağdan Türkçesini seç. (Tur ${G.r+1}/${G.rounds.length})</div>
+      <div class="match"><div class="stack" style="--g:0">${G.left.map(it=>`<div class="tile ${G.done.has(it.id)?'done':''} ${G.sel===it.id?'sel':''}" data-act="mL" data-id="${it.id}">${esc(it.en)}</div>`).join('')}</div>
+      <div class="stack">${G.right.map(it=>`<div class="tile ${G.done.has(it.id)?'done':''}" data-act="mR" data-id="${it.id}">${esc(it.tr)}</div>`).join('')}</div></div></div></div>`;
+    $('#mTime').textContent=((Date.now()-G.t0)/1000).toFixed(1)+' sn';
+    return;
+  }
+  if(G.k==='yaz'){
+    if(G.i>=G.q.length) return finish(`<div class="grid g3"><div class="card center"><div class="big" style="color:var(--ok)">${G.ok}/${G.q.length}</div>doğru yazdın</div></div>`);
+    const it=G.q[G.i], a=G.ans; const mm=it.example?findIn(it.example,it.en):null;
+    const hintTxt = G.hint? it.en.split('').map((c,k)=>k<G.hint*2||c===' '?c:'_').join('') : '';
+    m.innerHTML=`<div style="max-width:620px;margin:0 auto">${gameTop(G.i,G.q.length)}
+      <div class="card stack"><div class="row"><span class="chip ${it.type}">${it.type==='kalip'?'kalıp':'kelime'}</span></div>
+        <div class="small muted">İngilizcesini yaz:</div>
+        <div style="font-family:'Bricolage Grotesque';font-size:28px;font-weight:800">${esc(it.tr)}</div>
+        ${mm?`<div class="gap small" style="font-size:16px">${esc(it.example.slice(0,mm.i))}<span class="${a?'fill':'blank'}">${a?esc(mm.txt):'&nbsp;'}</span>${esc(it.example.slice(mm.i+mm.len))}</div>`:''}
+        ${hintTxt&&!a?`<div style="font-family:monospace;font-size:20px;letter-spacing:2px">${esc(hintTxt)}</div>`:''}
+        <form id="wForm" class="row"><input class="in sp" id="wIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="İngilizcesi…" ${a?'disabled':''} style="font-size:18px;min-width:180px"><button class="btn pri" ${a?'disabled':''}>Kontrol</button></form>
+        ${a?`<div class="fb ${a.ok?'ok':'no'}">${a.ok?(a.typo?'Neredeyse! Küçük yazım hatası. Doğrusu: ':'✓ Doğru: '):'✗ Doğrusu: '}<b>${esc(it.en)}</b>${a.given&&!a.ok?`<div class="small muted">Senin cevabın: ${esc(a.given)}</div>`:''}${it.note?`<div class="small muted">📝 ${esc(it.note)}</div>`:''}</div><div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="nextW">Devam →</button></div>`
+          :`<div class="row"><button class="btn sm" data-act="wHint">💡 İpucu (−2 XP)</button><button class="btn sm ghost" data-act="wSkip">Bilmiyorum</button></div>`}
+      </div></div>`;
+    if(!a){ const f=$('#wForm'); f.onsubmit=e=>{ e.preventDefault(); checkWrite(); }; setTimeout(()=>$('#wIn')&&$('#wIn').focus(),30); }
+    else setTimeout(()=>{ const b=m.querySelector('[data-act=nextW]'); b&&b.focus(); },30);
+  }
+}
+function finish(body){
+  const earned=S.stats.xp-G.startXp; const k=G.k, pool=G.pool;
+  const names={kart:'Kartlar',test:'Test',bosluk:'Boşluk doldur',esle:'Eşleştir',yaz:'Yaz'};
+  clearInterval(gTimer); gTimer=null;
+  $('#main').innerHTML=`<div style="max-width:620px;margin:0 auto" class="stack"><div class="card center"><div class="big">🎉</div><h2 style="margin-top:8px">${names[k]} bitti!</h2><div class="big" style="color:var(--acc);font-size:34px">+${earned} XP</div><div class="muted small" style="margin-top:6px">Bugün: ${S.stats.days[today()]||0}/${S.stats.goal} XP · 🔥 ${streak()} gün seri</div></div>${body}
+  <div class="row" style="justify-content:center"><button class="btn" data-act="toMenu">Çalış menüsü</button><button class="btn pri" data-act="again" data-k="${k}">Bir tur daha</button></div></div>`;
+  G={k, pool, over:true};
+}
+/* game actions */
+function rate(q){
+  const it=G.q[G.i]; grade(it,q); G.res[q]++;
+  const x={good:10,hard:6,again:2}[q]; addXp(x, $('.flash'));
+  if(q==='again'){ G.re[it.id]=(G.re[it.id]||0)+1; if(G.re[it.id]<=2) G.q.splice(Math.min(G.i+4,G.q.length),0,it); }
+  G.i++; G.flip=false; drawGame();
+}
+function answer(k){
+  if(G.ans!==null) return; const Q=G.q[G.i]; G.ans=k; const ok=k===Q.right;
+  if(ok){ G.combo++; G.best=Math.max(G.best,G.combo); G.ok++; grade(Q.it,'good'); drawGame(); addXp(10+Math.min((G.combo-1)*2,10), $('.opt.right')); }
+  else { G.combo=0; grade(Q.it,'again'); drawGame(); }
+}
+function nextQ(){ G.i++; G.ans=null; drawGame(); }
+function mL(id){ if(G.done.has(id)) return; G.sel=id; drawGame(); }
+function mR(id, el){
+  if(!G.sel || G.done.has(id)) return;
+  const L=G.rounds[G.r].find(x=>x.id===G.sel);
+  if(id===G.sel){
+    G.done.add(G.sel); if(!G.bad.has(G.sel)) grade(L,'good'); G.sel=null; G.xp+=5; addXp(5, el);
+    if(G.rounds[G.r].every(x=>G.done.has(x.id))){
+      G.times.push(Date.now()-G.rt0);
+      if(G.r+1<G.rounds.length){ G.r++; newRound(); drawGame(); }
+      else { const tot=Date.now()-G.t0; const per5=Math.min(...G.times.map((t,i)=>t*5/G.rounds[i].length)); let rec=false; if(!S.stats.bestMatch||per5<S.stats.bestMatch){ S.stats.bestMatch=Math.round(per5); saveStats(); rec=true; } if(G.mist===0) addXp(15); setTimeout(()=>finish(`<div class="grid g3"><div class="card center"><div class="big">${(tot/1000).toFixed(1)}</div>saniye</div><div class="card center"><div class="big" style="color:${G.mist?'var(--bad)':'var(--ok)'}">${G.mist}</div>hata${G.mist?'':' (+15 XP bonus)'}</div>${rec?'<div class="card center"><div class="big">🏆</div>Yeni rekor!</div>':''}</div>`),300); drawGame(); }
+    } else drawGame();
+  } else {
+    G.mist++; if(!G.bad.has(G.sel)){ G.bad.add(G.sel); grade(L,'again'); }
+    el.classList.add('shake'); const l=document.querySelector(`.tile[data-act=mL][data-id="${G.sel}"]`); l&&l.classList.add('shake');
+    setTimeout(()=>{ el.classList.remove('shake'); l&&l.classList.remove('shake'); },380);
+  }
+}
+function checkWrite(){
+  const it=G.q[G.i]; const given=$('#wIn').value; const g=norm(given); if(!g){ $('#wIn').focus(); return; }
+  const targets=[...new Set(it.en.split('/').map(s=>norm(s)).concat([norm(it.en.replace(/\([^)]*\)/g,'')), norm(it.en.replace(/[()]/g,''))]).filter(Boolean))];
+  let ok=false, typo=false;
+  for(const t of targets){ if(g===t){ ok=true; typo=false; break; } const d=lev(g,t); if((d<=1&&t.length>=5)||(d<=2&&t.length>=11)){ ok=true; typo=true; } }
+  G.ans={ok,typo,given};
+  if(ok){ G.ok++; grade(it, typo||G.hint?'hard':'good'); drawGame(); addXp(Math.max(4,(typo?10:14)-G.hint*2), $('.fb')); }
+  else { grade(it,'again'); drawGame(); }
+}
+function nextW(){ G.i++; G.hint=0; G.ans=null; drawGame(); }
+
+/* ---------- METİN ---------- */
+function vMetin(){
+  const o=S.metinOpen;
+  if(o==='new') return metinNew();
+  if(o){ const t=S.texts.find(x=>x.id===o); if(t) return metinDetail(t); S.metinOpen=null; }
+  $('#main').innerHTML=`<div class="stack">
+  <div class="card"><div class="row"><div class="sp"><h2 style="margin:0">Metin defteri</h2><div class="small muted">Çözdüğün paragrafları (Reading at Work, deneme, video) burada sakla. Önce kendin çevir, sonra kontrol et.</div></div><button class="btn pri" data-act="newText">➕ Yeni metin</button></div></div>
+  ${S.texts.length?S.texts.map(t=>`<div class="item" data-act="openText" data-id="${t.id}"><div class="row"><span class="en sp">${esc(t.title||'Başlıksız metin')}</span>${t.analysis?'<span class="chip kalip">çözümlendi</span>':''}</div><div class="small muted">${t.source?esc(t.source)+' · ':''}${new Date(t.created||Date.now()).toLocaleDateString('tr-TR')} · ${esc(String(t.body||'').slice(0,110))}…</div></div>`).join('')
+  :`<div class="card empty"><div class="big">📄</div><h3>Henüz metin yok</h3><p class="muted">Hocanın çözdüğü ya da Reading at Work’ten bir paragrafı yapıştır.<span class="ai-txt"> Claude cümle cümle çeviri, yapı analizi ve kelime listesi çıkarabilir; senin çevirine de geri bildirim verir.</span></p></div>`}
+  </div>`;
+}
+function metinNew(){
+  $('#main').innerHTML=`<div class="card stack" style="max-width:820px;margin:0 auto">
+    <div class="row"><button class="btn sm ghost" data-act="textsBack">← Metinler</button><h2 class="sp" style="margin:0">Yeni metin</h2></div>
+    <div class="grid g2" style="gap:10px"><div><label class="f">Başlık</label><input class="in" id="tTitle" placeholder="ör. RaW Unit 3 – Paragraf 2"></div><div><label class="f">Kaynak</label><input class="in" id="tSrc" list="srcList2" placeholder="ör. Reading at Work 1" value="${esc(S.lastSource)}"><datalist id="srcList2">${sources().map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div></div>
+    <div><label class="f">İngilizce metin *</label><textarea class="in" id="tBody" rows="8" placeholder="Paragrafı buraya yapıştır…"></textarea><div class="small muted" id="tCount"></div></div>
+    <div><label class="f">Benim çevirim (isteğe bağlı — önce kendin dene!)</label><textarea class="in" id="tMy" rows="5" placeholder="Kendi Türkçe çevirin…"></textarea></div>
+    <div class="row"><button class="btn ai ai-only lg" data-act="analyze">✨ Claude ile çözümle</button><button class="btn" data-act="saveText">Sadece kaydet</button></div>
+    <div class="small muted no-ai">Claude yardımı şu an kullanılamıyor; metni kaydedip defterindeki kelimelerin vurgulu halini görebilirsin.</div>
+    <div id="anaOut"></div>
+  </div>`;
+  $('#tBody').oninput=()=>{ const n=$('#tBody').value.length; $('#tCount').textContent=n?n+' karakter'+(n>3500?' — çok uzun, 2 parçaya bölmeni öneririm':''):''; };
+}
+function textFromForm(){ const body=$('#tBody').value.trim(); if(!body){ toast('Önce metni yapıştır.'); return null; } return {id:newId('t'), title:$('#tTitle').value.trim()||body.split(/\s+/).slice(0,6).join(' ')+'…', source:$('#tSrc').value.trim(), body, my:$('#tMy').value.trim(), created:Date.now(), analysis:null}; }
+async function analyze(btn, t){
+  if(!sample){ toast('Claude yardımı kullanılamıyor.'); return; }
+  const body=t.body.slice(0,4000);
+  const prompt=`Sen YDS'ye (Türkiye) hazırlanan bir öğrencinin okuma ve çeviri hocasısın. Öğrencinin hedefi 55+ puan. Aşağıdaki İngilizce metni YDS hocası gibi çözümle. SADECE geçerli JSON döndür, başka hiçbir şey yazma.
+METİN:
+"""${body}"""
+${t.my?`ÖĞRENCİNİN ÇEVİRİSİ:\n"""${t.my.slice(0,4000)}"""`:''}
+Şema:
+{"mainIdea":"metnin ana fikri, 1-2 cümle Türkçe",
+"sentences":[{"en":"orijinal cümle (aynen)","tr":"doğal, akıcı Türkçe çeviri","structure":"cümlenin iskeleti: asıl özne + asıl yüklem, bağlaçlar ve yan cümleler (which/that/although…), zaman/edilgen yapı; çeviride nereden başlanmalı. Kısa ve Türkçe."}],
+"items":[{"en":"metindeki önemli kelime veya kalıp (sözlük hali)","type":"kelime"|"kalip","tr":"metindeki anlamıyla kısa Türkçe karşılık","note":"çok kısa not (kelime türü, kullanım, eş anlamlı)"}],
+"feedback":${t.my?'"öğrencinin çevirisine nazik ama net geri bildirim: doğru yaptıkları, anlam hataları, atladığı yerler ve nasıl düzeltileceği; 3-6 madde, Türkçe"':'""'}}
+Kurallar: sentences tüm cümleleri sırayla kapsasın. items 8-20 öğe olsun; YDS'de sık çıkan akademik kelimeler, bağlaçlar, edat öbekleri, phrasal verb'ler öncelikli; çok basit kelimeleri (the, people, make vb.) alma.`;
+  const old=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="spin"></span> Çözümleniyor…';
+  try{
+    const r=await sample(prompt,{modelTier:'default', onText:({text})=>{ btn.innerHTML='<span class="spin"></span> Çözümleniyor… ('+text.length+' karakter)'; }});
+    const o=parseJSON(r&&r.text);
+    if(!o||!Array.isArray(o.sentences)) throw {message:'parse'};
+    t.analysis={mainIdea:String(o.mainIdea||''), sentences:o.sentences.slice(0,60).map(s=>({en:String(s.en||''),tr:String(s.tr||''),structure:String(s.structure||'')})), items:(o.items||[]).slice(0,30).map(x=>({en:String(x.en||''),type:x.type==='kalip'?'kalip':'kelime',tr:String(x.tr||''),note:String(x.note||'')})).filter(x=>x.en&&x.tr), feedback:String(o.feedback||''), at:Date.now(), forMy:t.my||''};
+    saveText(t); S.metinOpen=t.id; addXp(15); render();
+  }catch(e){ aiErr(e); btn.disabled=false; btn.innerHTML=old; }
+}
+function hlText(text){
+  const its=S.items.filter(i=>phraseRe(i.en)).sort((a,b)=>gapCore(b.en).length-gapCore(a.en).length).slice(0,600);
+  if(!its.length) return esc(text);
+  let re; try{ re=new RegExp(its.map(i=>'\\b('+phraseRe(i.en)+')').join('|'),'gi'); }catch(e){ return esc(text); }
+  let out='', last=0, m;
+  while((m=re.exec(text))){ if(!m[0]){ re.lastIndex++; continue; } let gi=1; while(gi<m.length && m[gi]===undefined) gi++; const it=its[gi-1]; out+=esc(text.slice(last,m.index))+`<mark class="hl" title="${esc(it.tr)}" data-act="hlTip" data-id="${it.id}">${esc(m[0])}</mark>`; last=m.index+m[0].length; }
+  return out+esc(text.slice(last));
+}
+function metinDetail(t){
+  const A=t.analysis;
+  $('#main').innerHTML=`<div class="stack" style="max-width:820px;margin:0 auto">
+  <div class="card stack"><div class="row"><button class="btn sm ghost" data-act="textsBack">← Metinler</button><h2 class="sp" style="margin:0">${esc(t.title||'Metin')}</h2><button class="btn sm ghost" data-act="delText" data-id="${t.id}" style="color:var(--bad)">🗑</button></div>
+    ${t.source?`<div><span class="chip src">${esc(t.source)}</span></div>`:''}
+    <div style="font-size:17px;line-height:1.75;white-space:pre-wrap">${hlText(t.body||'')}</div>
+    <div class="small muted">Vurgulananlar defterinde olan kelime/kalıplar — dokununca anlamı görünür.</div>
+  </div>
+  <div class="card stack"><h3 style="margin:0">Benim çevirim</h3><textarea class="in" id="myTr" rows="5" placeholder="Önce kendin çevir…">${esc(t.my||'')}</textarea>
+    <div class="row"><button class="btn sm" data-act="saveMy" data-id="${t.id}">Kaydet</button><button class="btn sm ai ai-only" data-act="reanalyze" data-id="${t.id}">✨ ${A?'Çevirimle birlikte yeniden çözümle':'Claude ile çözümle'}</button></div></div>
+  ${A?`
+  ${A.mainIdea?`<div class="card"><h3>💡 Ana fikir</h3><div>${esc(A.mainIdea)}</div></div>`:''}
+  ${A.feedback?`<div class="card" style="border-color:var(--ok)"><h3>📝 Çevirine geri bildirim</h3><div style="white-space:pre-wrap">${esc(A.feedback)}</div></div>`:''}
+  <div class="card"><div class="row"><h3 class="sp">Cümle cümle çözümleme</h3><button class="btn sm" data-act="toggleTr">Çevirileri ${S.hideTr?'göster':'gizle'}</button></div>
+    ${A.sentences.map((s,k)=>`<div class="sent"><div><b class="muted small">${k+1}.</b> ${hlText(s.en)}</div>${S.hideTr?`<button class="btn sm ghost" data-act="peek" data-k="${k}" style="margin-top:4px">👁 Çeviriyi göster</button><div class="tr" data-peek="${k}" hidden>${esc(s.tr)}</div>`:`<div class="tr">${esc(s.tr)}</div>`}${s.structure?`<div class="st">🔍 ${esc(s.structure)}</div>`:''}</div>`).join('')}
+  </div>
+  <div class="card"><div class="row"><h3 class="sp">Bu metindeki kelime & kalıplar</h3><button class="btn sm pri" data-act="addAllA" data-id="${t.id}">Hepsini deftere ekle</button></div>
+    ${A.items.map((x,k)=>{ const d=findDup(x.en); return `<div class="row" style="padding:8px 0;border-top:1px solid var(--line)"><span class="chip ${x.type}">${x.type==='kalip'?'kalıp':'kelime'}</span><b>${esc(x.en)}</b><span class="muted sp">${esc(x.tr)}${x.note?` · <span class="small">${esc(x.note)}</span>`:''}</span>${d?'<span class="small" style="color:var(--ok)">✓ defterde</span>':`<button class="btn sm" data-act="addA" data-id="${t.id}" data-k="${k}">+ Ekle</button>`}</div>`; }).join('')}
+  </div>`:''}
+  </div>`;
+}
+function itemFromA(t, x){
+  const A=t.analysis; const s=A.sentences.find(s=>findIn(s.en,x.en));
+  return mkItem({type:x.type, en:x.en, tr:x.tr, note:x.note, example:s?s.en:'', exampleTr:s?s.tr:'', source:t.source||t.title||'Metin', tags:'metin'});
+}
+
+/* ---------- actions ---------- */
+const ACT={
+  startDaily:()=>{ S.pf.scope='gunluk'; savePrefs(); const p=getPool(); if(!p.length){ toast('Bugün tekrar edilecek kart yok 🎉 Tüm defterle çalışabilirsin.'); go('calis'); return; } startGame('kart', p); },
+  starter:()=>addStarter(),
+  settings:()=>settingsModal(),
+  backup:()=>backupModal(),
+  aiFill:b=>aiFill(b),
+  bulkAdd:b=>bulkAdd(b),
+  toggleItem:(b,e)=>{ if(e.target.closest('button')) return; S.df.open = S.df.open===b.dataset.id?null:b.dataset.id; renderDefList(); },
+  editItem:b=>editModal(b.dataset.id),
+  delItem:async b=>{ const it=S.items.find(x=>x.id===b.dataset.id); if(it && await ask(`<b>${esc(it.en)}</b> silinsin mi?`,'Sil')){ deleteItem(it.id); toast('Silindi'); onData(); } },
+  resetItem:b=>{ const it=S.items.find(x=>x.id===b.dataset.id); if(!it) return; Object.assign(it,{box:0,due:0,seen:0,correct:0,wrong:0}); saveItem(it); toast('Sıfırlandı, yeni kart gibi sorulacak.'); renderDefList(); },
+  startGame:b=>startGame(b.dataset.k),
+  quitGame:()=>{ endGame(); vCalis(); },
+  toMenu:()=>{ endGame(); vCalis(); },
+  again:b=>{ const k=b.dataset.k; endGame(); const p=getPool(); if(!p.length){ toast('Bu seçimde çalışılacak öğe kalmadı 🎉'); vCalis(); return; } startGame(k,p); },
+  flip:()=>{ if(G&&G.k==='kart'&&!G.flip){ G.flip=true; drawGame(); } },
+  rate:b=>rate(b.dataset.q),
+  answer:b=>answer(+b.dataset.k),
+  nextQ:()=>nextQ(),
+  mL:b=>mL(b.dataset.id),
+  mR:b=>mR(b.dataset.id,b),
+  wHint:()=>{ G.hint++; S.stats.xp=Math.max(0,S.stats.xp-2); saveStats(); hud(); drawGame(); },
+  wSkip:()=>{ const it=G.q[G.i]; G.ans={ok:false,given:''}; grade(it,'again'); drawGame(); },
+  nextW:()=>nextW(),
+  newText:()=>{ S.metinOpen='new'; render(); },
+  textsBack:()=>{ S.metinOpen=null; render(); },
+  openText:b=>{ S.metinOpen=b.dataset.id; render(); window.scrollTo(0,0); },
+  saveText:()=>{ const t=textFromForm(); if(!t) return; saveText(t); S.lastSource=t.source; savePrefs(); S.metinOpen=t.id; toast('Metin kaydedildi ✓'); render(); },
+  analyze:b=>{ const t=textFromForm(); if(!t) return; S.lastSource=t.source; savePrefs(); analyze(b,t); },
+  reanalyze:b=>{ const t=S.texts.find(x=>x.id===b.dataset.id); if(!t) return; t.my=$('#myTr').value.trim(); analyze(b,{...t}); },
+  saveMy:b=>{ const t=S.texts.find(x=>x.id===b.dataset.id); if(!t) return; t.my=$('#myTr').value.trim(); saveText({...t}); toast('Çevirin kaydedildi ✓'); },
+  delText:async b=>{ if(await ask('Bu metin silinsin mi? (Deftere eklediğin kelimeler kalır.)','Sil')){ deleteText(b.dataset.id); S.metinOpen=null; render(); } },
+  toggleTr:()=>{ S.hideTr=!S.hideTr; render(); },
+  peek:b=>{ const d=document.querySelector(`[data-peek="${b.dataset.k}"]`); if(d){ d.hidden=false; b.remove(); } },
+  addA:b=>{ const t=S.texts.find(x=>x.id===b.dataset.id); const x=t&&t.analysis.items[+b.dataset.k]; if(!x||findDup(x.en)) return; saveItem(itemFromA(t,x)); addXp(2,b); toast('Eklendi ✓ '+x.en); render(); },
+  addAllA:b=>{ const t=S.texts.find(x=>x.id===b.dataset.id); if(!t) return; let n=0; t.analysis.items.forEach(x=>{ if(!findDup(x.en)){ saveItem(itemFromA(t,x)); n++; } }); if(n) addXp(Math.min(n*2,40),b); toast(n?n+' öğe defterine eklendi ✓':'Hepsi zaten defterinde ✓'); render(); },
+  hlTip:b=>{ const it=S.items.find(x=>x.id===b.dataset.id); if(it) toast(it.en+' — '+it.tr, 3500); }
+};
+document.addEventListener('click', e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const f=ACT[b.dataset.act]; if(f){ e.preventDefault(); f(b,e); }
+});
+document.addEventListener('keydown', e=>{
+  if(!G || S.view!=='calis' || !$('#modal').hidden) return;
+  const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea'||tag==='select') return;
+  if(G.over) return;
+  if(G.k==='kart'){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); if(!G.flip) ACT.flip(); } else if(G.flip&&['1','2','3'].includes(e.key)) rate(['again','hard','good'][+e.key-1]); }
+  if(G.k==='test'||G.k==='bosluk'){ if(G.ans===null && ['1','2','3','4'].includes(e.key)){ const k=+e.key-1; if(k<G.q[G.i].opts.length) answer(k); } else if(G.ans!==null && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); nextQ(); } }
+  if(G.k==='yaz' && G.ans && e.key==='Enter'){ e.preventDefault(); nextW(); }
+});
+
+/* ---------- start ---------- */
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden' && stT && S.mode==='cloud'){ clearTimeout(stT); stT=null; persist('_stats', {...S.stats, kind:'stats'}); } });
+hud(); route(); connect();
+</script>
+</body>
+</html>
