@@ -51,6 +51,7 @@ main{max-width:980px;margin:0 auto;padding:16px}
   nav.tabs a.on{background:var(--card);box-shadow:var(--sh);color:var(--acc)}
   main{margin:0;padding:18px 0 40px;max-width:880px}
 }
+.addbar{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}.addbar .in{font-size:17px;padding:12px 14px}.addbar #aEn{font-weight:700}@media (max-width:640px){.addbar{grid-template-columns:1fr}.addbar .btn{padding:12px}}
 .phead{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:4px 2px 2px}
 .phead h1{margin:0}.phead p{margin:2px 0 0;color:var(--muted)}
 .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media (min-width:1100px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -416,45 +417,62 @@ function vAna(){
 function sources(){ return [...new Set(S.items.map(i=>i.source).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr')); }
 let addType='kelime';
 function ekleHTML(){
-  return `<form class="card stack" id="fAdd" autocomplete="off" style="border-color:var(--acc)">
-    <div class="row"><h3 class="sp" style="margin:0">➕ Yeni kelime / kalıp</h3>
-      <div class="seg" id="typeSeg"><button type="button" data-t="kelime" class="${addType==='kelime'?'on':''}">Kelime</button><button type="button" data-t="kalip" class="${addType==='kalip'?'on':''}">Kalıp</button></div>
-      <button type="button" class="btn sm ghost" data-act="closeAdd" title="Kapat">✕</button></div>
-    <div><label class="f" for="aEn">İngilizce *</label><input class="in" id="aEn" required placeholder="ör. due to" style="font-size:18px;font-weight:700"><div id="dupWarn" class="small" style="color:var(--bad);margin-top:4px"></div></div>
-    <div><div class="row" style="margin-bottom:4px"><label class="f sp" for="aTr" style="margin:0">Türkçe anlamı *</label><button type="button" class="btn sm ai ai-only" data-act="aiFill">✨ Claude doldursun</button></div>
-      <input class="in" id="aTr" required placeholder="ör. nedeniyle, -den dolayı"></div>
-    <div><label class="f" for="aSrc">Nereden? (kaynak)</label><input class="in" id="aSrc" list="srcList" placeholder="ör. Hoca – Video 3" value="${esc(S.lastSource)}"><datalist id="srcList">${sources().map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
-    <details id="addMore"><summary class="small">+ Örnek cümle ve not ekle (isteğe bağlı)</summary><div class="stack" style="margin-top:10px">
-      <div><label class="f" for="aEx">Örnek cümle</label><input class="in" id="aEx" placeholder="The delay was due to bad weather."></div>
-      <div><label class="f" for="aExTr">Örnek cümlenin çevirisi</label><input class="in" id="aExTr" placeholder="Gecikme kötü hava nedeniyleydi."></div>
-      <div><label class="f" for="aNote">Not</label><input class="in" id="aNote" placeholder="ör. due to + isim · eş anl.: owing to"></div>
-      <div><label class="f" for="aTags">Etiketler (virgülle)</label><input class="in" id="aTags" placeholder="bağlaç, zıtlık"></div></div></details>
-    <div class="row"><button class="btn pri" type="submit">Kaydet</button><span class="small muted">Enter ile kaydedebilirsin; kaynak bir sonraki kayıt için hatırlanır.</span></div>
-    <details id="bulkBox" style="border-top:1px dashed var(--line);padding-top:10px"><summary class="small">⚡ Elinde liste mi var? Toplu ekle</summary>
-      <p class="small muted">Her satıra bir tane: <code>ingilizce = türkçe</code>. Birden çok kelimeli satırlar “kalıp” sayılır.<span class="ai-txt"> Anlamı boş bırakırsan Claude doldurur.</span></p>
-      <textarea class="in" id="bulkTxt" rows="6" placeholder="nevertheless = yine de&#10;in terms of = açısından&#10;give rise to"></textarea>
-      <div class="row" style="margin-top:8px"><button class="btn" type="button" data-act="bulkAdd">Listeyi ekle</button><span id="bulkMsg" class="small muted"></span></div></details>
+  return `<form class="card" id="fAdd" autocomplete="off">
+    <div class="addbar">
+      <input class="in" id="aEn" required placeholder="İngilizce  (ör. abundant)" autocapitalize="off" spellcheck="false">
+      <input class="in" id="aTr" placeholder="Türkçesi (boşsa ben bulurum)">
+      <button class="btn pri" type="submit" id="aBtn">Ekle</button>
+    </div>
+    <div id="dupWarn" class="small" style="color:var(--bad);margin-top:6px"></div>
+    <div class="small muted" style="margin-top:4px">Enter ile ekle. Anlamı sonra değiştirmek için listede kelimeye dokun. · <a href="#" data-act="bulkOpen">Elinde liste mi var?</a></div>
   </form>`;
 }
 function bindEkle(){
   if(!$('#fAdd')) return;
-  $('#typeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; addType=b.dataset.t; $('#aEn').dataset.manual='1'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x===b)); };
-  $('#aEn').addEventListener('input', ()=>{ dupCheck(); const v=$('#aEn').value.trim(); if(/\s/.test(v) && addType==='kelime' && !$('#aEn').dataset.manual){ addType='kalip'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t==='kalip')); } });
+  $('#aEn').addEventListener('input', dupCheck);
   $('#fAdd').onsubmit=e=>{ e.preventDefault(); addFromForm(); };
-  setTimeout(()=>$('#aEn')&&$('#aEn').focus(),50);
+  if(S.addOpen){ S.addOpen=false; setTimeout(()=>$('#aEn')&&$('#aEn').focus(),50); }
+}
+async function lookupMeaning(en){
+  if(sample){
+    const prompt=`YDS'ye hazırlanan bir öğrenci için İngilizce ifadenin Türkçe anlamını ver. SADECE geçerli JSON döndür.
+İfade: "${en}"
+{"tr":"kısa Türkçe anlam(lar), en yaygın YDS anlamı önce, en fazla 3 tane, virgülle","example":"kısa akademik İngilizce örnek cümle, ifadeyi aynen içersin","exampleTr":"örneğin Türkçe çevirisi","note":"çok kısa not: kelime türü / kullanım (ör. 'due to + isim')"}`;
+    try{ const r=await sample(prompt,{modelTier:'quick'}); const o=parseJSON(r&&r.text); if(o&&o.tr) return o; }
+    catch(e){ if(e&&e.code==='not_granted'){ sample=null; document.body.classList.remove('has-ai'); } }
+  }
+  try{
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),7000);
+    const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(en)+'&langpair=en|tr',{signal:ctl.signal}); clearTimeout(t);
+    const j=await r.json(); if(+j.responseStatus!==200) return null;
+    const out=[]; const add=x=>{ x=String(x||'').replace(/[.!]+$/,'').trim(); if(!x||x.length>60||norm(x)===norm(en)||/[A-Z]{6,}/.test(x)) return; x=x.toLocaleLowerCase('tr'); if(!out.some(y=>norm(y)===norm(x))&&out.length<3) out.push(x); };
+    add(j.responseData&&j.responseData.translatedText);
+    (j.matches||[]).filter(m=>(m.quality==null||+m.quality>=50)).sort((a,b)=>(+b.match||0)-(+a.match||0)).forEach(m=>add(m.translation));
+    if(out.length) return {tr:out.join(', ')};
+  }catch(e){}
+  return null;
 }
 function findDup(en, exceptId){ const n=norm(en); return n ? S.items.find(i=>norm(i.en)===n && i.id!==exceptId) : null; }
 function dupCheck(){ const d=findDup($('#aEn').value); $('#dupWarn').innerHTML = d ? `Bu zaten defterinde: <b>${esc(d.en)}</b> — ${esc(d.tr)} <button type="button" class="btn sm" data-act="editItem" data-id="${d.id}">Düzenle</button>` : ''; }
 function refreshEkleSide(){ const dl=$('#srcList'); if(dl) dl.innerHTML=sources().map(s=>`<option value="${esc(s)}">`).join(''); }
-function addFromForm(){
-  const en=$('#aEn').value.trim(), tr=$('#aTr').value.trim();
-  if(!en||!tr){ toast('İngilizce ve Türkçe anlam gerekli.'); return; }
-  if(findDup(en)){ toast('Bu ifade zaten defterinde — düzenleyebilirsin.'); return; }
-  const it=mkItem({type:addType, en, tr, example:$('#aEx').value, exampleTr:$('#aExTr').value, note:$('#aNote').value, source:$('#aSrc').value, tags:$('#aTags').value});
-  saveItem(it); S.lastSource=it.source; savePrefs(); addXp(2, $('#fAdd button[type=submit]'));
-  ['aEn','aTr','aEx','aExTr','aNote'].forEach(k=>$('#'+k).value=''); delete $('#aEn').dataset.manual; $('#dupWarn').innerHTML='';
-  addType='kelime'; [...$('#typeSeg').children].forEach(x=>x.classList.toggle('on',x.dataset.t==='kelime')); $('#addMore').open=false;
-  toast('Eklendi ✓ '+it.en); refreshEkleSide(); renderDefList(); $('#aEn').focus();
+let adding=false;
+async function addFromForm(){
+  if(adding) return;
+  const en=$('#aEn').value.trim(); let tr=$('#aTr').value.trim(); let extra={};
+  if(!en){ $('#aEn').focus(); return; }
+  if(findDup(en)){ toast('Bu zaten defterinde ✓'); return; }
+  const btn=$('#aBtn');
+  if(!tr){
+    adding=true; btn.disabled=true; btn.innerHTML='<span class="spin"></span> Anlamı bulunuyor…';
+    const o=await lookupMeaning(en);
+    adding=false; btn.disabled=false; btn.textContent='Ekle';
+    if(!o||!o.tr){ toast('Anlamını bulamadım, Türkçesini sen yazar mısın?',3500); $('#aTr').focus(); return; }
+    tr=o.tr; extra={example:o.example||'', exampleTr:o.exampleTr||'', note:o.note||''};
+  }
+  const it=mkItem({type:/\s/.test(en)?'kalip':'kelime', en, tr, ...extra});
+  saveItem(it); addXp(2, btn);
+  $('#aEn').value=''; $('#aTr').value=''; $('#dupWarn').innerHTML='';
+  toast('Eklendi ✓  '+it.en+' = '+it.tr, 3200); renderDefList(); $('#aEn').focus();
 }
 async function aiFill(btn){
   const en=$('#aEn').value.trim(); if(!en){ toast('Önce İngilizce ifadeyi yaz.'); $('#aEn').focus(); return; }
@@ -501,38 +519,35 @@ Her öğe: {"en":"ifadenin kendisi","type":"kelime"|"kalip","tr":"kısa Türkçe
     }
     btn.disabled=false;
   }
+  if(missing.length && !sample){ btn.disabled=true; let k=0; for(const c of missing){ k++; $('#bulkMsg').innerHTML='<span class="spin"></span> Anlamlar bulunuyor… '+k+'/'+missing.length; const o=await lookupMeaning(c.en); if(o&&o.tr) c.tr=o.tr; } btn.disabled=false; }
   let n=0, noTr=0;
   parsed.forEach(p=>{ if(!p.tr){ noTr++; return; } saveItem(mkItem({...p, type:p.type|| (/\s/.test(p.en)?'kalip':'kelime'), source:src})); n++; });
   if(n) addXp(Math.min(n*2,60), btn);
   $('#bulkMsg').textContent=`${n} eklendi`+(skipped?`, ${skipped} zaten vardı`:'')+(noTr?`, ${noTr} anlamsız satır atlandı`:'');
   const keep=parsed.filter(p=>!p.tr).map(p=>p.en); $('#bulkTxt').value=keep.join('\n');
-  refreshEkleSide();
+  refreshEkleSide(); renderDefList(); if(!keep.length) setTimeout(closeModal,1200);
 }
 
 /* ---------- DEFTER ---------- */
 function vDefter(){
   const f=S.df;
   $('#main').innerHTML=`<div class="stack">
-  <div class="phead"><div class="sp"><h1>Kelimelerim</h1><p>Hocanın verdiği kelime ve kalıplar burada. ${S.items.length} kayıt.</p></div>${S.addOpen?'':'<button class="btn pri" data-act="openAdd">➕ Yeni ekle</button>'}<button class="btn" data-act="backup">💾 Yedek</button></div>
-  ${S.addOpen?ekleHTML():''}
+  <div class="phead"><div class="sp"><h1>Kelimelerim</h1><p>Kelimeyi ve anlamını yaz, Ekle'ye bas. Şu an <span id="defCount">${S.items.length}</span> kelime var.</p></div><button class="btn" data-act="backup">💾 Yedek</button></div>
+  ${ekleHTML()}
   <div class="card stack">
-    <input class="in" id="dQ" placeholder="🔎 Ara: kelime, anlam, not, kaynak…" value="${esc(f.q)}">
+    <input class="in" id="dQ" placeholder="🔎 Defterinde ara…" value="${esc(f.q)}">
     <div class="row">
-      <select class="in" id="dType" style="width:auto"><option value="hepsi">Hepsi</option><option value="kelime">Kelimeler</option><option value="kalip">Kalıplar</option></select>
-      <select class="in" id="dSrc" style="width:auto;max-width:220px"><option value="">Tüm kaynaklar</option>${sources().map(s=>`<option ${s===f.src?'selected':''}>${esc(s)}</option>`).join('')}</select>
       <select class="in" id="dSort" style="width:auto"><option value="yeni">En yeni</option><option value="eski">En eski</option><option value="az">A → Z</option><option value="zor">En çok zorlandıklarım</option><option value="kutu">Hafıza kutusu</option></select>
     </div>
   </div>
   <div id="defList"></div></div>`;
-  $('#dType').value=f.type; $('#dSort').value=f.sort;
+  f.type='hepsi'; f.src=''; $('#dSort').value=f.sort;
   $('#dQ').oninput=e=>{ f.q=e.target.value; renderDefList(); };
-  $('#dType').onchange=e=>{ f.type=e.target.value; renderDefList(); };
-  $('#dSrc').onchange=e=>{ f.src=e.target.value; renderDefList(); };
   $('#dSort').onchange=e=>{ f.sort=e.target.value; renderDefList(); };
   renderDefList(); bindEkle();
 }
 function renderDefList(){
-  const f=S.df, el=$('#defList'); if(!el) return;
+  const f=S.df, el=$('#defList'); if(!el) return; const dc=$('#defCount'); if(dc) dc.textContent=S.items.length;
   const q=norm(f.q);
   let L=S.items.filter(i=>(f.type==='hepsi'||i.type===f.type)&&(!f.src||i.source===f.src)&&(!q||norm([i.en,i.tr,i.note,i.source,i.example,(i.tags||[]).join(' ')].join(' ')).includes(q)));
   const srt={yeni:(a,b)=>b.created-a.created, eski:(a,b)=>a.created-b.created, az:(a,b)=>a.en.localeCompare(b.en,'en'), zor:(a,b)=>(b.wrong-b.correct)-(a.wrong-a.correct)||b.wrong-a.wrong, kutu:(a,b)=>a.box-b.box};
@@ -1233,6 +1248,7 @@ const ACT={
   starter:()=>addStarter(),
   openAdd:()=>{ S.addOpen=true; if(S.view!=='defter') go('defter'); else { vDefter(); window.scrollTo(0,0); } },
   closeAdd:()=>{ S.addOpen=false; if(location.hash==='#ekle'){ try{ history.replaceState(null,'','#defter'); }catch(e){} } vDefter(); },
+  bulkOpen:()=>{ modal(`<div class="row"><h2 class="sp" style="margin:0">Liste yapıştır</h2><button class="btn sm ghost" data-close>✕</button></div><p class="small muted" style="margin:0">Her satıra bir tane: <code>ingilizce = türkçe</code>. Anlamını bilmediklerini sadece İngilizce yaz, ben bulurum.</p><textarea class="in" id="bulkTxt" rows="8" placeholder="nevertheless = yine de&#10;in terms of = açısından&#10;abundant"></textarea><div class="row"><span id="bulkMsg" class="small muted sp"></span><button class="btn pri" id="bulkGo">Listeyi ekle</button></div>`); $('#modal').querySelector('[data-close]').onclick=closeModal; $('#bulkGo').onclick=e=>bulkAdd(e.currentTarget); },
   settings:()=>settingsModal(),
   backup:()=>backupModal(),
   aiFill:b=>aiFill(b),
